@@ -18,7 +18,7 @@ import {
 '../data/mockData';
 import { FacilityCard } from '../components/ui/FacilityCard';
 import { SafeCareLevelIndicator } from '../components/ui/SafeCareLevelIndicator';
-export const FacilitiesList = ({ facilities = [] }: { facilities: any[] }) => {
+export default function FacilitiesList({ facilities = [] }: { facilities: any[] }) {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');

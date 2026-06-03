@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Send } from 'lucide-react';
 import { Layout } from '../components/layout/Layout';
-export const Contact: React.FC = () => {
+export default function Contact() {
   return (
     <div className="bg-afya-bg min-h-screen py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -3,7 +3,7 @@ import { Shield, Activity, Search, Star, CheckCircle2 } from 'lucide-react';
 import { Layout } from '../components/layout/Layout';
 import { SafeCareLevelIndicator } from '../components/ui/SafeCareLevelIndicator';
 import { JCIAccreditedBadge } from '../components/ui/JCIAccreditedBadge';
-export const About: React.FC = () => {
+export default function About() {
   return (
     <div className="bg-white min-h-screen">
       {/* Hero */}

@@ -50,7 +50,7 @@ const educationalSlides = [
   color: 'bg-cyan-50'
 }];
 
-export const Home = ({ facilities = [] }: { facilities: any[] }) => {
+export default function Home({ facilities = [] }: { facilities: any[] }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedService, setSelectedService] = useState('');

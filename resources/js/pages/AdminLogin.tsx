@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { router, Link } from '@inertiajs/react';
 import { ShieldCheck, MapPin, Heart, ArrowLeft } from 'lucide-react';
-export const AdminLogin: React.FC = () => {
+export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const handleLogin = (e: React.FormEvent) => {

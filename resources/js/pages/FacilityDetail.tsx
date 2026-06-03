@@ -24,7 +24,7 @@ import { facilities } from '../data/mockData';
 import { SafeCareLevelIndicator } from '../components/ui/SafeCareLevelIndicator';
 import { JCIAccreditedBadge } from '../components/ui/JCIAccreditedBadge';
 import { StarRating } from '../components/ui/StarRating';
-export const FacilityDetail = ({ facility }: { facility: any }) => {
+export default function FacilityDetail({ facility }: { facility: any }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isSticky, setIsSticky] = useState(false);
   useEffect(() => {

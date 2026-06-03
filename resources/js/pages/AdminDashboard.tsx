@@ -18,7 +18,7 @@ import {
 'lucide-react';
 
 import { SafeCareLevelIndicator } from '../components/ui/SafeCareLevelIndicator';
-export const AdminDashboard = ({ facilities = [] }: { facilities: any[] }) => {
+export default function AdminDashboard({ facilities = [] }: { facilities: any[] }) {
   const [activeTab, setActiveTab] = useState('facilities');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -456,26 +456,24 @@ export const AdminDashboard = ({ facilities = [] }: { facilities: any[] }) => {
                   placeholder="Facility overview...">
                 </textarea>
                 </div>
-              </div>
-              <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <div className="p-6 border-t border-gray-200 flex justify-end gap-3 mt-4">
                 <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50">
-                
                   Cancel
                 </button>
                 <button
                 type="submit"
                 disabled={processing}
                 className="px-4 py-2 bg-afya-deep text-white rounded-lg font-medium hover:bg-opacity-90">
-                
                   Save Facility
                 </button>
               </div>
             </form>
           </div>
         </div>
+      </div>
       }
     </div>);
 
