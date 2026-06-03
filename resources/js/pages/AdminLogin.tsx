@@ -1,142 +1,153 @@
-import React, { useState } from 'react';
-import { router, Link } from '@inertiajs/react';
-import { ShieldCheck, MapPin, Heart, ArrowLeft } from 'lucide-react';
+import React from 'react';
+import { useForm, Link } from '@inertiajs/react';
+import { ShieldCheck, MapPin, Heart, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+
 export default function AdminLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
+  const { data, setData, post, processing, errors } = useForm({
+    email: '',
+    password: '',
+    remember: false,
+  });
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - just navigate to dashboard
-    router.get('/admin');
+    post('/admin/auth/login');
   };
+
   return (
-    <div className="min-h-screen bg-afya-bg flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center mb-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="relative flex items-center justify-center w-10 h-10 bg-afya-deep rounded-xl text-white shadow-lg">
-              <MapPin size={24} className="absolute" />
-              <Heart size={12} className="absolute mt-[-2px] fill-white" />
+    <div style={{ minHeight: '100vh', background: '#F2F4F7', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px 16px' }}>
+      <div style={{ maxWidth: 448, margin: '0 auto', width: '100%' }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <div style={{ position: 'relative', width: 44, height: 44, background: '#0F4C75', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(15,76,117,0.35)' }}>
+              <MapPin size={24} color="white" />
+              <Heart size={11} color="white" fill="white" style={{ position: 'absolute', bottom: 8 }} />
             </div>
-            <span className="text-3xl font-bold text-afya-text tracking-tight">
-              Afya<span className="text-afya-mid">Map</span>
+            <span style={{ fontSize: 28, fontWeight: 800, color: '#2F5D7C', letterSpacing: '-0.5px' }}>
+              Afya<span style={{ color: '#6F97C1' }}>Map</span>
             </span>
           </Link>
         </div>
-        <h2 className="mt-2 text-center text-2xl font-bold text-gray-900">
-          Admin Portal Access
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Authorized personnel only. For public use,{' '}
-          <Link
-            href="/"
-            className="font-medium text-afya-deep hover:text-afya-mid">
-            
-            return to home
-          </Link>
-          .
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-100">
-          <div className="mb-6 flex justify-center">
-            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
-              <ShieldCheck size={32} className="text-afya-deep" />
+        <h2 style={{ textAlign: 'center', fontSize: 22, fontWeight: 700, color: '#1a1a2e', marginBottom: 6 }}>Admin Portal Access</h2>
+        <p style={{ textAlign: 'center', fontSize: 14, color: '#6b7280', marginBottom: 32 }}>
+          Authorized personnel only.{' '}
+          <Link href="/" style={{ color: '#0F4C75', fontWeight: 600 }}>Return to public site</Link>
+        </p>
+
+        {/* Card */}
+        <div style={{ background: '#fff', borderRadius: 20, boxShadow: '0 8px 40px rgba(0,0,0,0.10)', border: '1px solid #e5e7eb', padding: '36px 32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+            <div style={{ width: 64, height: 64, background: '#EBF4FF', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldCheck size={32} color="#0F4C75" />
             </div>
           </div>
 
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700">
-                
-                Email address
+          {/* Flash error */}
+          {errors.email && (
+            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '10px 14px', marginBottom: 20, color: '#DC2626', fontSize: 14 }}>
+              {errors.email}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin}>
+            {/* Email */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                Email Address
               </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-afya-deep focus:border-afya-deep sm:text-sm"
-                  placeholder="admin@pharmaccess.org" />
-                
-              </div>
+              <input
+                type="email"
+                autoComplete="email"
+                required
+                value={data.email}
+                onChange={e => setData('email', e.target.value)}
+                placeholder="admin@afyamap.tz"
+                style={{
+                  display: 'block', width: '100%', boxSizing: 'border-box',
+                  padding: '12px 14px', fontSize: 15, color: '#111827',
+                  background: '#F9FAFB', border: '1.5px solid #D1D5DB',
+                  borderRadius: 10, outline: 'none', transition: 'border-color 0.2s',
+                  fontFamily: 'inherit',
+                }}
+                onFocus={e => (e.target.style.borderColor = '#0F4C75')}
+                onBlur={e => (e.target.style.borderColor = '#D1D5DB')}
+              />
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700">
-                
+            {/* Password */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
                 Password
               </label>
-              <div className="mt-1">
+              <div style={{ position: 'relative' }}>
                 <input
-                  id="password"
-                  name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-afya-deep focus:border-afya-deep sm:text-sm"
-                  placeholder="••••••••" />
-                
+                  value={data.password}
+                  onChange={e => setData('password', e.target.value)}
+                  placeholder="••••••••"
+                  style={{
+                    display: 'block', width: '100%', boxSizing: 'border-box',
+                    padding: '12px 44px 12px 14px', fontSize: 15, color: '#111827',
+                    background: '#F9FAFB', border: '1.5px solid #D1D5DB',
+                    borderRadius: 10, outline: 'none', transition: 'border-color 0.2s',
+                    fontFamily: 'inherit',
+                  }}
+                  onFocus={e => (e.target.style.borderColor = '#0F4C75')}
+                  onBlur={e => (e.target.style.borderColor = '#D1D5DB')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 0 }}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
+            {/* Remember me */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: '#374151' }}>
                 <input
-                  id="remember-me"
-                  name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-afya-deep focus:ring-afya-deep border-gray-300 rounded" />
-                
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-900">
-                  
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-afya-deep hover:text-afya-mid">
-                  
-                  Forgot your password?
-                </a>
-              </div>
+                  checked={data.remember}
+                  onChange={e => setData('remember', e.target.checked)}
+                  style={{ width: 16, height: 16, accentColor: '#0F4C75' }}
+                />
+                Remember me
+              </label>
+              <a href="#" style={{ fontSize: 14, color: '#0F4C75', fontWeight: 600, textDecoration: 'none' }}>Forgot password?</a>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-afya-deep hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-afya-deep transition-colors">
-                
-                Sign in to Dashboard
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={processing}
+              style={{
+                width: '100%', padding: '13px', fontSize: 15, fontWeight: 700,
+                color: '#fff', background: processing ? '#6F97C1' : '#0F4C75',
+                border: 'none', borderRadius: 10, cursor: processing ? 'not-allowed' : 'pointer',
+                transition: 'background 0.2s', boxShadow: '0 2px 10px rgba(15,76,117,0.3)',
+              }}>
+              {processing ? 'Signing in…' : 'Sign in to Dashboard'}
+            </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900">
-              
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#6b7280', textDecoration: 'none' }}>
               <ArrowLeft size={16} /> Back to public site
             </Link>
           </div>
         </div>
-      </div>
-    </div>);
 
-};
+        {/* Hint */}
+        <p style={{ textAlign: 'center', marginTop: 18, fontSize: 13, color: '#9CA3AF' }}>
+          Default: <strong>admin@afyamap.tz</strong> / <strong>admin123</strong>
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -2,16 +2,138 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Facility;
 use Illuminate\Database\Seeder;
 
 class FacilitySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        //
+        $facilities = [
+            [
+                'name' => 'Muhimbili National Hospital',
+                'region' => 'Dar es Salaam',
+                'category' => 'National Hospitals',
+                'safeCareLevel' => 4,
+                'jciAccredited' => false,
+                'rating' => 4.2,
+                'reviewCount' => 1245,
+                'services' => ['Emergency','Surgery','ICU','Specialist Clinics','Laboratory','Radiology','Pharmacy'],
+                'insurances' => ['NHIF','Jubilee','AAR','Strategis'],
+                'image' => 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800',
+                'gallery' => ['https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800','https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800'],
+                'address' => 'United Nations Road, Upanga, Dar es Salaam',
+                'phone' => '+255 22 215 1367',
+                'email' => 'info@mnh.go.tz',
+                'hours' => '24 Hours',
+                'established' => '1956',
+                'beds' => '1500+',
+                'emergency247' => true,
+                'languages' => ['Swahili','English'],
+                'description' => 'Muhimbili National Hospital (MNH) is the national referral hospital and university teaching hospital with 1,500 beds, attending 1,000–1,200 outpatients per day.',
+                'lat' => -6.8086,
+                'lng' => 39.2743,
+            ],
+            [
+                'name' => 'Aga Khan Hospital Dar es Salaam',
+                'region' => 'Dar es Salaam',
+                'category' => 'Private Hospitals',
+                'safeCareLevel' => 5,
+                'jciAccredited' => true,
+                'rating' => 4.8,
+                'reviewCount' => 856,
+                'services' => ['Emergency','Maternity','Surgery','ICU','Specialist Clinics','Laboratory','Radiology','Pharmacy'],
+                'insurances' => ['NHIF','Jubilee','AAR','Strategis','Britam','MO Assurance'],
+                'image' => 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800',
+                'gallery' => ['https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800','https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800'],
+                'address' => 'Ocean Road, Dar es Salaam',
+                'phone' => '+255 22 211 5151',
+                'email' => 'info@akhst.org',
+                'hours' => '24 Hours',
+                'established' => '1964',
+                'beds' => '170',
+                'emergency247' => true,
+                'languages' => ['Swahili','English','Gujarati'],
+                'description' => 'The Aga Khan Hospital Dar es Salaam is the only JCI-accredited hospital in Tanzania, offering comprehensive multi-specialty care.',
+                'lat' => -6.8115,
+                'lng' => 39.2945,
+            ],
+            [
+                'name' => 'KCMC – Kilimanjaro Christian Medical Centre',
+                'region' => 'Kilimanjaro',
+                'category' => 'Zonal Referral',
+                'safeCareLevel' => 4,
+                'jciAccredited' => false,
+                'rating' => 4.5,
+                'reviewCount' => 642,
+                'services' => ['Emergency','Surgery','ICU','Specialist Clinics','Laboratory','Radiology','Pharmacy','Eye Care'],
+                'insurances' => ['NHIF','Jubilee','Strategis'],
+                'image' => 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800',
+                'gallery' => ['https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800'],
+                'address' => 'Sokoine Road, Moshi, Kilimanjaro',
+                'phone' => '+255 27 275 4377',
+                'email' => 'kcmcadmin@kcmc.ac.tz',
+                'hours' => '24 Hours',
+                'established' => '1971',
+                'beds' => '630',
+                'emergency247' => true,
+                'languages' => ['Swahili','English'],
+                'description' => 'KCMC is a referral hospital for over 15 million people in Northern Tanzania with over 630 beds.',
+                'lat' => -3.3242,
+                'lng' => 37.3364,
+            ],
+            [
+                'name' => 'Bugando Medical Centre',
+                'region' => 'Mwanza',
+                'category' => 'Zonal Referral',
+                'safeCareLevel' => 4,
+                'jciAccredited' => false,
+                'rating' => 4.3,
+                'reviewCount' => 512,
+                'services' => ['Emergency','Maternity','Surgery','ICU','Specialist Clinics','Laboratory','Radiology','Pharmacy'],
+                'insurances' => ['NHIF','Jubilee','AAR'],
+                'image' => 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800',
+                'gallery' => ['https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800'],
+                'address' => 'Bugando Hill, Mwanza',
+                'phone' => '+255 28 250 0513',
+                'email' => 'info@bugandomedicalcentre.go.tz',
+                'hours' => '24 Hours',
+                'established' => '1971',
+                'beds' => '950',
+                'emergency247' => true,
+                'languages' => ['Swahili','English'],
+                'description' => 'Bugando Medical Centre is a consultant and teaching hospital for the Lake and Western zones of Tanzania, situated on Lake Victoria.',
+                'lat' => -2.5284,
+                'lng' => 32.9056,
+            ],
+            [
+                'name' => 'Benjamin Mkapa Hospital',
+                'region' => 'Dodoma',
+                'category' => 'National Hospitals',
+                'safeCareLevel' => 4,
+                'jciAccredited' => false,
+                'rating' => 4.6,
+                'reviewCount' => 380,
+                'services' => ['Emergency','Surgery','ICU','Specialist Clinics','Laboratory','Radiology','Pharmacy'],
+                'insurances' => ['NHIF','Jubilee','AAR','Strategis'],
+                'image' => 'https://images.unsplash.com/photo-1504439468489-c8920d786a2b?auto=format&fit=crop&q=80&w=800',
+                'gallery' => ['https://images.unsplash.com/photo-1504439468489-c8920d786a2b?auto=format&fit=crop&q=80&w=800'],
+                'address' => 'University of Dodoma Campus, Dodoma',
+                'phone' => '+255 26 296 3710',
+                'email' => 'info@bmh.or.tz',
+                'hours' => '24 Hours',
+                'established' => '2015',
+                'beds' => '400',
+                'emergency247' => true,
+                'languages' => ['Swahili','English'],
+                'description' => 'Benjamin Mkapa Hospital is a modern national hospital in Tanzania\'s capital, offering highly specialized medical services.',
+                'lat' => -6.1731,
+                'lng' => 35.7516,
+            ],
+        ];
+
+        foreach ($facilities as $facility) {
+            Facility::updateOrCreate(['name' => $facility['name']], $facility);
+        }
     }
 }

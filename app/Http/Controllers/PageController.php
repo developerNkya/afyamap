@@ -10,23 +10,44 @@ class PageController extends Controller
 {
     public function home()
     {
-        return Inertia::render('Home', [
-            'facilities' => Facility::all()
-        ]);
+        $facilities = Facility::select('id','name','region','category','safeCareLevel',
+            'jciAccredited','rating','reviewCount','services','insurances','image')
+            ->get();
+
+        return Inertia::render('Home', ['facilities' => $facilities]);
     }
 
-    public function facilitiesList()
+    public function facilitiesList(Request $request)
     {
+        $query = Facility::query();
+
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('region', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
+            });
+        }
+        if ($request->filled('region')) {
+            $query->where('region', $request->region);
+        }
+        if ($request->filled('level')) {
+            $query->where('safeCareLevel', '>=', (int)$request->level);
+        }
+
+        $facilities = $query->orderBy('safeCareLevel', 'desc')->get();
+
         return Inertia::render('FacilitiesList', [
-            'facilities' => Facility::all()
+            'facilities' => $facilities,
+            'filters'    => $request->only(['q','region','level']),
         ]);
     }
 
     public function facilityDetail($id)
     {
-        return Inertia::render('FacilityDetail', [
-            'facility' => Facility::findOrFail($id)
-        ]);
+        $facility = Facility::findOrFail($id);
+        return Inertia::render('FacilityDetail', ['facility' => $facility]);
     }
 
     public function about()
