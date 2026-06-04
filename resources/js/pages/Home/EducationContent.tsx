@@ -129,7 +129,7 @@ export const EducationalSection = ({ currentSlide, setCurrentSlide }: { currentS
       if (!isHovering) {
         nextSlide();
       }
-    }, 1000);
+    }, 4000);
     
     // Cleanup on unmount
     return () => {
@@ -137,7 +137,7 @@ export const EducationalSection = ({ currentSlide, setCurrentSlide }: { currentS
         clearInterval(autoScrollRef.current);
       }
     };
-  }, [isHovering]); // Re-run when isHovering changes
+  }, [isHovering, currentSlide]); // Re-run when isHovering or currentSlide changes
 
   // Re-trigger animations on slide change
   useEffect(() => {
