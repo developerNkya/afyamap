@@ -9,6 +9,8 @@ import { BrowseCategories } from '../pages/Home/BrowseCategories';
 import { BrowseRegions } from '../pages/Home/BrowseRegions';
 import { StatsSection } from '../pages/Home/StatsSection';
 import { CTASection } from '../pages/Home/CTASection';
+import { TestimonialsSection } from '../pages/Home/TestimonialsSection';
+import { ContactSection } from '../pages/Home/ContactSection';
 
 export default function Home({ facilities = [] }: { facilities: any[] }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,7 +59,13 @@ export default function Home({ facilities = [] }: { facilities: any[] }) {
 
       <StatsSection />
 
-      <CTASection />
+      {/* NEW: Testimonials Section */}
+      <TestimonialsSection />
+
+      {/* NEW: Contact Section */}
+      <ContactSection />
+
+      {/* <CTASection /> */}
     </div>
   );
 }
