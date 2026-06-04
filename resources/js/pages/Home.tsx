@@ -63,7 +63,7 @@ export default function Home({ facilities = [] }: { facilities: any[] }) {
       <TestimonialsSection />
 
       {/* NEW: Contact Section */}
-      <ContactSection />
+      {/* <ContactSection /> */}
 
       {/* <CTASection /> */}
     </div>
