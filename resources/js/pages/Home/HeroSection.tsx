@@ -146,14 +146,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
                 </div>
 
+                {/* Updated Button - Less red, more elegant */}
                 <div>
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onHoverStart={() => setIsSearchHovered(true)}
                     onHoverEnd={() => setIsSearchHovered(false)}
                     type="submit"
-                    className="w-full bg-gradient-to-r from-afya-accent to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md flex justify-center items-center gap-2"
+                    className="w-full bg-afya-accent hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg flex justify-center items-center gap-2 relative overflow-hidden group"
                   >
                     <motion.div
                       animate={{ x: isSearchHovered ? [0, 3, 0] : 0 }}
@@ -161,7 +162,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     >
                       <Search size={18} className="sm:w-5 sm:h-5" />
                     </motion.div>
-                    Search
+                    <span>Search Facilities</span>
+                    {/* Subtle shine effect on hover */}
+                    <motion.div
+                      className="absolute inset-0 bg-white/20 rounded-xl"
+                      initial={{ x: "-100%", opacity: 0 }}
+                      animate={{ x: isSearchHovered ? "100%" : "-100%", opacity: isSearchHovered ? 0.5 : 0 }}
+                      transition={{ duration: 0.6 }}
+                    />
                   </motion.button>
                 </div>
               </div>
