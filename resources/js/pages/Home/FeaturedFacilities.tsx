@@ -55,6 +55,7 @@ export const FeaturedFacilities: React.FC<FeaturedFacilitiesProps> = ({ faciliti
                 facility={facility} 
                 layout="horizontal" 
                 index={index} 
+                className="h-full"
               />
             </motion.div>
           ))}
