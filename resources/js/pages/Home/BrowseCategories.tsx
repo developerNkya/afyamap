@@ -11,8 +11,7 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
   const [searchTerm, setSearchTerm] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // Default 10 items (2 rows of 5)
-  const sectionRef = useRef<HTMLElement>(null);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,10 +19,10 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
       const width = window.innerWidth;
       if (width < 768) {
         setIsMobile(true);
-        setItemsPerPage(5); // Mobile: 1 row of 5
+        setItemsPerPage(5);
       } else {
         setIsMobile(false);
-        setItemsPerPage(10); // Tablet/Desktop: 2 rows of 5
+        setItemsPerPage(10);
       }
     };
     
@@ -55,18 +54,16 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
   // Handle page navigation with smooth scroll to top
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-    
-    // Scroll to the categories section header
     setTimeout(() => {
       if (headerRef.current) {
-        const yOffset = -80; // Adjust for fixed headers
+        const yOffset = -80;
         const y = headerRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
         window.scrollTo({ top: y, behavior: 'smooth' });
       }
     }, 100);
   };
 
-  // Also scroll when search term changes
+  // Scroll when search changes
   useEffect(() => {
     if (searchTerm) {
       setTimeout(() => {
@@ -98,14 +95,18 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
     return pages;
   };
 
-  // Get visible item range for display
-  const startItem = startIndex + 1;
-  const endItem = Math.min(startIndex + itemsPerPage, filteredCategories.length);
+  const getGridCols = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 640) return 'grid-cols-2';
+      if (window.innerWidth < 768) return 'grid-cols-2';
+    }
+    return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5';
+  };
 
   return (
-    <section ref={sectionRef} className="py-8 sm:py-12 md:py-16 bg-white">
+    <section className="py-8 sm:py-12 md:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header - Add ref for scrolling target */}
+        {/* Header */}
         <div ref={headerRef}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -113,7 +114,6 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
             viewport={{ once: true }}
             className="text-center mb-6 sm:mb-8"
           >
-            {/* Icon inside title */}
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-afya-text mb-2 flex items-center justify-center gap-2 flex-wrap">
               <Stethoscope size={28} className="text-afya-deep" />
               Browse by <span className="text-afya-deep">Category</span>
@@ -138,22 +138,7 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
           </div>
         </div>
 
-        {/* Results Info */}
-        {filteredCategories.length > 0 && (
-          <div className="text-center mb-4">
-            <p className="text-xs text-gray-500">
-              {searchTerm ? (
-                <>Showing <span className="font-semibold text-afya-deep">{startItem}-{endItem}</span> of{' '}
-                <span className="font-semibold text-afya-deep">{filteredCategories.length}</span> categories matching "<span className="font-medium">{searchTerm}</span>"</>
-              ) : (
-                <>Showing <span className="font-semibold text-afya-deep">{startItem}-{endItem}</span> of{' '}
-                <span className="font-semibold text-afya-deep">{filteredCategories.length}</span> categories</>
-              )}
-            </p>
-          </div>
-        )}
-
-        {/* Categories Display with Pagination */}
+        {/* Categories Grid */}
         <AnimatePresence mode="wait">
           {filteredCategories.length === 0 ? (
             <motion.div
@@ -191,13 +176,13 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
               ))}
             </motion.div>
           ) : (
-            // Grid View on Tablet/Desktop (2 rows of 5 = 10 items per page)
+            // Grid View on Tablet/Desktop
             <motion.div
               key="grid"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5"
+              className={`grid ${getGridCols()} gap-3 sm:gap-4 md:gap-5`}
             >
               {paginatedCategories.map((category, index) => (
                 <CategoryCard key={category.slug} category={category} layout="grid" index={index} />
@@ -209,11 +194,6 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
         {/* Pagination Controls - Only show if more than 1 page */}
         {totalPages > 1 && (
           <div className="flex flex-col items-center gap-3 mt-8 sm:mt-10">
-            {/* Items per page indicator */}
-            <div className="text-[10px] text-gray-400">
-              {isMobile ? '5 items per page' : '10 items per page (2 rows)'}
-            </div>
-            
             {/* Page Navigation */}
             <div className="flex items-center gap-1 sm:gap-2">
               {/* Previous Button */}
