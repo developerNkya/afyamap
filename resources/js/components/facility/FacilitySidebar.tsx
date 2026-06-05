@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, Navigation, AlertCircle } from 'lucide-react';
+import { FacilityMap } from './FacilityMap';   // <-- import the map
 
 interface FacilitySidebarProps {
   facility: any;
@@ -17,21 +18,9 @@ export const FacilitySidebar: React.FC<FacilitySidebarProps> = ({ facility }) =>
       >
         {/* Location Card */}
         <section id="section-location" className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm scroll-mt-32">
-          <div className="h-48 bg-gray-200 relative">
-            <img
-              src={`https://maps.googleapis.com/maps/api/staticmap?center=${facility.lat},${facility.lng}&zoom=15&size=600x300&maptype=roadmap&markers=color:red%7C${facility.lat},${facility.lng}&key=YOUR_API_KEY`}
-              alt="Map placeholder"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800';
-              }}
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center">
-              <div className="bg-white p-2 rounded-full shadow-lg text-afya-accent">
-                <MapPin size={32} className="fill-current" />
-              </div>
-            </div>
-          </div>
+          {/* REAL DARK MAP */}
+          <FacilityMap lat={facility.lat} lng={facility.lng} name={facility.name} />
+
           <div className="p-6">
             <h3 className="font-bold text-lg mb-4">Location & Contact</h3>
             <ul className="space-y-4 mb-6">
@@ -57,13 +46,16 @@ export const FacilitySidebar: React.FC<FacilitySidebarProps> = ({ facility }) =>
                 </div>
               </li>
             </ul>
-            <button className="w-full bg-afya-deep text-white py-3 rounded-xl font-bold hover:bg-opacity-90 transition-colors flex justify-center items-center gap-2">
+            <button
+              onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${facility.lat},${facility.lng}`, '_blank')}
+              className="w-full bg-afya-deep text-white py-3 rounded-xl font-bold hover:bg-opacity-90 transition-colors flex justify-center items-center gap-2"
+            >
               <Navigation size={18} /> Open in Maps
             </button>
           </div>
         </section>
 
-        {/* Report Card */}
+        {/* Report Card (unchanged) */}
         <div className="bg-gray-50 rounded-2xl border border-gray-200 p-6 text-center">
           <AlertCircle size={24} className="text-gray-400 mx-auto mb-2" />
           <h4 className="font-medium text-gray-900 mb-1">Is this information incorrect?</h4>
