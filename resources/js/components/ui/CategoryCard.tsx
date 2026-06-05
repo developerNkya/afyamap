@@ -27,6 +27,9 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
     return count.toString();
   };
 
+  // Direct link to /facilities – no query parameters
+  const facilitiesUrl = '/facilities';
+
   // LIST VIEW LAYOUT - Horizontal card for mobile
   if (layout === 'list') {
     return (
@@ -37,7 +40,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
         className="w-full"
       >
         <Link
-          href={`/category/${category.slug}`}
+          href={facilitiesUrl}
           className="group flex items-center gap-3 sm:gap-4 bg-white rounded-xl p-3 sm:p-4 border border-gray-100 hover:border-afya-deep/30 hover:shadow-md transition-all duration-300"
         >
           {/* Icon */}
@@ -74,7 +77,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       className="h-full"
     >
       <Link
-        href={`/category/${category.slug}`}
+        href={facilitiesUrl}
         className="group block bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-afya-mid/30 transition-all duration-300 h-full"
       >
         <div className="flex flex-col items-start gap-3">

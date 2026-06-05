@@ -35,7 +35,7 @@ export const RegionCard: React.FC<RegionCardProps> = ({
       className="h-full"
     >
       <Link
-        href={`/region/${region.slug}`}
+        href="/facilities"
         className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-afya-mid/30 transition-all duration-300 flex flex-col items-center text-center h-full w-full overflow-hidden"
         style={{ minHeight: '180px' }}
       >
