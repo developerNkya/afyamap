@@ -15,7 +15,7 @@ const tabs = [
 
 export const FacilityTabs: React.FC<FacilityTabsProps> = ({ activeTab, scrollToTab }) => {
   return (
-    <div className="sticky top-0 md:top-16 z-30 bg-white border-b border-gray-200 shadow-sm mb-8">
+    <div className="sticky top-20 z-30 bg-white border-b border-gray-200 shadow-sm mb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex overflow-x-auto hide-scrollbar">
           {tabs.map((tab) => (

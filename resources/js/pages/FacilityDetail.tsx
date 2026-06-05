@@ -27,7 +27,7 @@ export default function FacilityDetail({ facility }: { facility: any }) {
     setActiveTab(tabId);
     const element = document.getElementById(`section-${tabId}`);
     if (element) {
-      const y = element.getBoundingClientRect().top + window.scrollY - 120;
+      const y = element.getBoundingClientRect().top + window.scrollY - 140;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
