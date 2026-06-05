@@ -1,12 +1,14 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
+require '/home/tancaret/tancare/vendor/autoload.php';
+$app = require_once '/home/tancaret/tancare/bootstrap/app.php';
 
-define('LARAVEL_START', microtime(true));
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
-require __DIR__.'/vendor/autoload.php';
+$response = $kernel->handle(
+    $request = Illuminate\Http\Request::capture()
+);
 
-$app = require_once __DIR__.'/bootstrap/app.php';
+$response->send();
 
-$app->handleRequest(Request::capture());
+$kernel->terminate($request, $response);
