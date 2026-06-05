@@ -17,7 +17,7 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
       transition={{ duration: 0.5, delay: 0.1 }}
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8"
     >
-      <div className="bg-white rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6 md:gap-8">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-5 md:gap-8">
         {/* Left side: Info & actions */}
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -29,69 +29,71 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 leading-tight">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 leading-tight">
             {facility.name}
           </h1>
 
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-gray-600 text-sm mb-4">
             <span className="flex items-center gap-1.5">
               <MapPin size={16} className="shrink-0" />
-              <span>{facility.address}</span>
+              <span className="text-sm">{facility.address}</span>
             </span>
             <span className="flex items-center gap-1.5">
               <Phone size={16} className="shrink-0" />
-              <span>{facility.phone}</span>
+              <span className="text-sm">{facility.phone}</span>
             </span>
           </div>
 
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            <button className="bg-afya-deep text-white px-4 sm:px-5 py-2.5 rounded-xl font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 text-sm">
-              <Navigation size={18} />
+            <button className="bg-afya-deep text-white px-4 py-2 rounded-xl font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 text-xs sm:text-sm">
+              <Navigation size={16} />
               <span>Directions</span>
             </button>
-            <button className="bg-white text-afya-deep border border-afya-deep px-4 sm:px-5 py-2.5 rounded-xl font-medium hover:bg-afya-light transition-colors flex items-center gap-2 text-sm">
-              <Phone size={18} />
+            <button className="bg-white text-afya-deep border border-afya-deep px-4 py-2 rounded-xl font-medium hover:bg-afya-light transition-colors flex items-center gap-2 text-xs sm:text-sm">
+              <Phone size={16} />
               <span>Call</span>
             </button>
-            <button className="bg-gray-100 text-gray-700 p-2.5 rounded-xl hover:bg-gray-200 transition-colors">
-              <Share2 size={18} />
+            <button className="bg-gray-100 text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition-colors">
+              <Share2 size={16} />
             </button>
           </div>
         </div>
 
-        {/* Right side: Quality & Rating cards - FIXED TO PREVENT OVERFLOW */}
-        <div className="md:w-72 shrink-0 flex flex-col gap-4">
+        {/* Right side: Quality & Rating cards - stacked on all screens (flex-col) */}
+        <div className="md:w-72 shrink-0 flex flex-col gap-3 sm:gap-4">
           {/* Quality Standards Card */}
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
+          <div className="bg-gray-50 rounded-xl p-3 sm:p-5 border border-gray-200">
+            <h3 className="text-[10px] sm:text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 sm:mb-3">
               Quality Standards
             </h3>
-            <div className="mb-4 w-full">
-              {/* Using size="md" ensures the indicator fits inside the card width */}
-              <SafeCareLevelIndicator level={facility.safeCareLevel} size="md" />
+            <div className="mb-2 sm:mb-4 w-full">
+              {/* Responsive indicator: smaller on mobile, normal on desktop */}
+              <div className="sm:scale-100 scale-90 origin-left">
+                <SafeCareLevelIndicator level={facility.safeCareLevel} size="sm" />
+              </div>
             </div>
             {facility.jciAccredited && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <JCIAccreditedBadge size="md" />
+              <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
+                <JCIAccreditedBadge size="sm" />
               </div>
             )}
           </div>
 
-          {/* Rating Card */}
+          {/* Rating Card - below quality card */}
           <div
-            className="bg-white rounded-xl p-4 border border-gray-200 flex items-center justify-between cursor-pointer hover:border-afya-mid transition-colors"
+            className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200 flex items-center justify-between cursor-pointer hover:border-afya-mid transition-colors"
             onClick={() => scrollToTab('reviews')}
           >
             <div>
-              <div className="text-2xl font-bold text-gray-800">
+              <div className="text-lg sm:text-2xl font-bold text-gray-800">
                 {facility.rating.toFixed(1)}
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-[10px] sm:text-sm text-gray-500">
                 {facility.reviewCount} reviews
               </div>
             </div>
-            <div className="bg-afya-deep text-white p-2 rounded-lg">
-              <Star size={24} className="fill-white" />
+            <div className="bg-afya-deep text-white p-1.5 sm:p-2 rounded-lg">
+              <Star size={18} className="sm:w-6 sm:h-6 fill-white" />
             </div>
           </div>
         </div>
