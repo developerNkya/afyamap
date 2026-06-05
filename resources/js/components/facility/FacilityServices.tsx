@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity } from 'lucide-react';
+import { Activity, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface FacilityServicesProps {
   services: string[];
 }
 
+const INITIAL_VISIBLE = 12;
+
 export const FacilityServices: React.FC<FacilityServicesProps> = ({ services }) => {
+  const [showAll, setShowAll] = useState(false);
+  const visibleServices = showAll ? services : services.slice(0, INITIAL_VISIBLE);
+  const hasMore = services.length > INITIAL_VISIBLE;
+
   return (
     <motion.section
       initial={{ opacity: 0 }}
@@ -16,22 +22,33 @@ export const FacilityServices: React.FC<FacilityServicesProps> = ({ services }) 
       className="scroll-mt-32 pt-4"
     >
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Available Services</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {services.map((service) => (
-          <div
+
+      {/* Chips layout instead of large cards */}
+      <div className="flex flex-wrap gap-2">
+        {visibleServices.map((service) => (
+          <span
             key={service}
-            className="bg-white p-4 rounded-xl border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow"
+            className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-sm hover:bg-afya-light hover:text-afya-deep transition-colors"
           >
-            <div className="w-12 h-12 bg-afya-light rounded-full flex items-center justify-center text-afya-deep shrink-0">
-              <Activity size={24} />
-            </div>
-            <div>
-              <h4 className="font-bold text-gray-900">{service}</h4>
-              <p className="text-sm text-gray-500">Standard care available</p>
-            </div>
-          </div>
+            <Activity size={14} />
+            {service}
+          </span>
         ))}
       </div>
+
+      {/* Show more / Show less button */}
+      {hasMore && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="mt-4 text-afya-deep text-sm font-medium flex items-center gap-1 hover:underline"
+        >
+          {showAll ? (
+            <>Show less <ChevronUp size={16} /></>
+          ) : (
+            <>Show all {services.length} services <ChevronDown size={16} /></>
+          )}
+        </button>
+      )}
     </motion.section>
   );
 };
