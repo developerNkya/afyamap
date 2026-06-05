@@ -23,12 +23,12 @@ export const FacilityMap: React.FC<FacilityMapProps> = ({ lat, lng, name }) => {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Use CartoDB Dark Matter – fully opaque tiles
-    const darkTileLayer = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    // Use standard OpenStreetMap tiles
+    const tileLayer = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     const map = L.map(mapRef.current).setView([lat, lng], 16);
-    L.tileLayer(darkTileLayer, {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
+    L.tileLayer(tileLayer, {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
       subdomains: 'abcd',
       maxZoom: 19,
       minZoom: 3,
