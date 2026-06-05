@@ -1,8 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Shield, Activity, Search, Star, CheckCircle2, Heart, MapPin, Award, Users, Globe, TrendingUp, Sparkles } from 'lucide-react';
+import { motion, useInView } from 'framer-motion';
 import { Layout } from '../components/layout/Layout';
 import { SafeCareLevelIndicator } from '../components/ui/SafeCareLevelIndicator';
 import { JCIAccreditedBadge } from '../components/ui/JCIAccreditedBadge';
+import { FloatingParticles } from '../pages/Home/FloatingParticles';
+
+// Simple trigger to show the indicator (no animation, just appears)
+const AnimatedSafeCareLevel = ({ targetLevel, size = 'md' }: { targetLevel: number; size?: 'sm' | 'md' | 'lg' }) => {
+  const [show, setShow] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
+
+  useEffect(() => {
+    if (isInView) setShow(true);
+  }, [isInView]);
+
+  return (
+    <div ref={ref}>
+      {show ? (
+        <SafeCareLevelIndicator level={targetLevel} size={size} showLabel={false} />
+      ) : (
+        // invisible placeholder to avoid layout shift
+        <div className="h-[32px] w-full max-w-[200px]" />
+      )}
+    </div>
+  );
+};
 
 export default function About() {
   const stats = [
@@ -14,35 +38,51 @@ export default function About() {
 
   return (
     <div className="bg-gradient-to-b from-white to-gray-50 min-h-screen">
-      {/* Hero Section – with subtle wave */}
-      <div className="relative bg-gradient-to-r from-afya-deep to-afya-mid text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M0,0 C150,40 350,0 500,20 C650,40 800,0 950,10 C1100,20 1150,30 1200,0 L1200,120 L0,120 Z" fill="white" />
-          </svg>
+      {/* Hero Section – no bottom wave */}
+      <section className="relative bg-afya-deep text-white pt-16 sm:pt-20 pb-24 sm:pb-32 overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-20">
+          <img
+            src="https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=2000"
+            alt="Healthcare background"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-afya-deep mix-blend-multiply"></div>
         </div>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6">
-            <Heart size={16} className="text-afya-light" />
-            <span className="text-sm font-medium">Transparency in Healthcare</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 tracking-tight">
+        <FloatingParticles />
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 mb-4 sm:mb-6"
+          >
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-300" />
+            <span className="text-xs sm:text-sm font-medium">Transparency in Healthcare</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 px-2"
+          >
             About <span className="text-afya-light">AfyaMap</span>
-          </h1>
-          <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-base sm:text-lg md:text-xl text-blue-100 mb-6 sm:mb-8 px-4 max-w-2xl mx-auto"
+          >
             "Quality transparency improves healthcare decision‑making – for everyone."
-          </p>
+          </motion.p>
         </div>
-        {/* Bottom wave */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-10 text-white fill-current">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" />
-          </svg>
-        </div>
-      </div>
+      </section>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
-        {/* Mission Statement – Card style */}
+        {/* Mission Statement */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12 text-center max-w-4xl mx-auto">
           <div className="w-16 h-16 bg-afya-light rounded-full flex items-center justify-center mx-auto mb-6 text-afya-deep">
             <Sparkles size={32} />
@@ -57,7 +97,7 @@ export default function About() {
           </p>
         </section>
 
-        {/* Stats Row */}
+        {/* Stats Row – no animation, just static values */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {stats.map((stat, idx) => (
             <div key={idx} className="bg-white rounded-xl p-6 text-center shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
@@ -70,7 +110,7 @@ export default function About() {
           ))}
         </div>
 
-        {/* How It Works – 3 step cards */}
+        {/* How It Works */}
         <section>
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">How AfyaMap Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -90,27 +130,27 @@ export default function About() {
           </div>
         </section>
 
-        {/* SafeCare Section – Visual & explanatory */}
+        {/* SafeCare Section – visual indicators appear once, no step‑by‑step */}
         <section className="bg-gradient-to-r from-blue-50 to-white rounded-3xl p-8 md:p-12 shadow-sm border border-blue-100">
           <div className="flex flex-col md:flex-row gap-12 items-center">
             <div className="md:w-1/2">
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Understanding SafeCare Levels</h2>
-              <p className="text-gray-600 mb-6 leading-relaxed">
+              <p className="text-gray-700 mb-6 leading-relaxed">
                 SafeCare is an internationally recognised methodology that measures healthcare quality.
                 The step‑wise indicator shows a facility's progress in implementing safety and quality standards.
               </p>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
                   <CheckCircle2 size={20} className="text-afya-deep shrink-0 mt-0.5" />
-                  <span><strong className="font-semibold">Level 1‑2:</strong> Establishing core safety protocols.</span>
+                  <span className="text-gray-800"><strong className="font-semibold">Level 1‑2:</strong> Establishing core safety protocols.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 size={20} className="text-afya-deep shrink-0 mt-0.5" />
-                  <span><strong className="font-semibold">Level 3:</strong> Solid quality management systems in place.</span>
+                  <span className="text-gray-800"><strong className="font-semibold">Level 3:</strong> Solid quality management systems in place.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 size={20} className="text-afya-deep shrink-0 mt-0.5" />
-                  <span><strong className="font-semibold">Level 4‑5:</strong> Outstanding adherence to international standards.</span>
+                  <span className="text-gray-800"><strong className="font-semibold">Level 4‑5:</strong> Outstanding adherence to international standards.</span>
                 </li>
               </ul>
             </div>
@@ -120,16 +160,16 @@ export default function About() {
                 {[5, 3, 1].map(level => (
                   <div key={level} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
                     <span className="font-medium text-gray-700">Level {level}</span>
-                    <SafeCareLevelIndicator level={level} size="md" showLabel={false} />
+                    <AnimatedSafeCareLevel targetLevel={level} size="md" />
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 text-center mt-6">Higher levels mean better safety & quality</p>
+              <p className="text-xs text-gray-500 text-center mt-6">Higher levels mean better safety & quality</p>
             </div>
           </div>
         </section>
 
-        {/* JCI Section – Gold standard */}
+        {/* JCI Section */}
         <section className="flex flex-col md:flex-row gap-10 items-center bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12">
           <div className="md:w-1/3 flex justify-center">
             <div className="w-36 h-36 bg-yellow-50 rounded-full flex items-center justify-center border-4 border-white shadow-xl ring-1 ring-yellow-200">
@@ -141,7 +181,7 @@ export default function About() {
               <h2 className="text-3xl font-bold text-gray-900">JCI Accreditation</h2>
               <JCIAccreditedBadge size="md" />
             </div>
-            <p className="text-gray-600 leading-relaxed text-lg">
+            <p className="text-gray-700 leading-relaxed text-lg">
               Joint Commission International (JCI) accreditation is considered the gold standard in global healthcare.
               Facilities that achieve this accreditation have undergone a rigorous evaluation process and demonstrate
               a commitment to continuous improvement in patient safety and quality of care. When you see this badge on
@@ -153,7 +193,7 @@ export default function About() {
         {/* PharmAccess Footer */}
         <div className="text-center bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Administered by PharmAccess</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">
+          <p className="text-gray-600 max-w-2xl mx-auto">
             AfyaMap is maintained and administered by PharmAccess, an international non‑profit organisation
             dedicated to improving access to quality healthcare in Africa.
           </p>
