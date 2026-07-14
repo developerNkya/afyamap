@@ -1,59 +1,25 @@
-# OS/Editor files
 .DS_Store
+# .env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
 /.fleet
 /.idea
 /.nova
+/.phpunit.cache
 /.vscode
 /.zed
-
-# Environment files
-.env
-.env.backup
-.env.production
-.env.local
-.env.*.local
-
-# PHP related
-.phpactor.json
-.phpunit.result.cache
-/.phpunit.cache
-
-# Node/JavaScript
-/node_modules
-npm-debug.log
-yarn-error.log
-package-lock.json
-yarn.lock
-
-# Build/Compiled files
 /bootstrap/ssr
+/node_modules
+# /public/build
 /public/hot
 /public/storage
 /storage/*.key
 /storage/pail
-# /public/build  # Uncomment if you want to ignore built assets
 
-# Authentication/Config
 auth.json
 Homestead.json
 Homestead.yaml
-
-# IDE specific
-*.swp
-*.swo
-*~
-*.log
-
-# Backup files
-*.backup
-*.bak
-*.old
-
-# If you want to completely ignore the demo folder, uncomment:
-/demo/
-
-# Project specific
-.htaccess
-.nginx
-*.sqlite
-*.db
+npm-debug.log
+yarn-error.log
