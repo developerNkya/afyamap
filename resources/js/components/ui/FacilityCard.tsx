@@ -30,7 +30,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
         isHorizontal ? 'flex flex-col md:flex-row' : 'flex flex-col'
       } ${className}`}
     >
-      {/* Image Section - Responsive */}
+      {/* Image Section - Clean, no overlays */}
       <div
         className={`relative overflow-hidden ${
           isHorizontal 
@@ -47,15 +47,12 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
-        ) : null}
-        {/* Fallback background when no image */}
-        <div className="absolute inset-0 bg-gradient-to-br from-afya-light to-afya-mid/20 flex items-center justify-center -z-0">
-          <svg className="w-12 h-12 text-afya-mid/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-        </div>
+        ) : (
+          /* Simple fallback background without icon */
+          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200"></div>
+        )}
 
-        {/* Badges */}
+        {/* Badges - Only these overlays remain */}
         <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1.5 sm:gap-2">
           {facility.jciAccredited && (
             <div className="bg-white/90 backdrop-blur-sm rounded-full p-0.5 shadow-sm">
@@ -135,9 +132,9 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
           </div>
         </div>
 
-        {/* Footer Row - FIXED: Buttons inline on all screens */}
+        {/* Footer Row */}
         <div className="flex flex-row items-center justify-between gap-3 pt-3 sm:pt-4 border-t border-gray-100">
-          {/* Insurance info - responsive width */}
+          {/* Insurance info */}
           <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs flex-1 min-w-0">
             <span className="font-semibold text-gray-400 uppercase tracking-wider text-[8px] sm:text-[10px] flex-shrink-0">
               Accepts
@@ -149,7 +146,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
             </span>
           </div>
           
-          {/* Buttons - Always inline, never stacked */}
+          {/* Buttons */}
           <div className="flex flex-row items-center gap-2 flex-shrink-0">
             <button
               className="p-1.5 sm:p-2 text-gray-400 hover:text-afya-deep hover:bg-afya-light rounded-lg transition-colors"
