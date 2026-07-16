@@ -86,10 +86,10 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
           >
             <div>
               <div className="text-lg sm:text-2xl font-bold text-gray-800">
-                {facility.rating.toFixed(1)}
+                {(facility.rating ?? 0).toFixed(1)}
               </div>
               <div className="text-[10px] sm:text-sm text-gray-500">
-                {facility.reviewCount} reviews
+                {facility.reviewCount ?? 0} reviews
               </div>
             </div>
             <div className="bg-afya-deep text-white p-1.5 sm:p-2 rounded-lg">

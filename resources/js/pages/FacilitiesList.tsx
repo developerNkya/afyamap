@@ -1,4 +1,4 @@
-// pages/FacilitiesList.tsx - Updated with pagination
+// pages/FacilitiesList.tsx - Connected to DB (normalized schema)
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/layout/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,35 +10,53 @@ import { FilterChips } from '../components/facilities/FilterChips';
 import { SearchBar } from '../components/facilities/SearchBar';
 import { ResultsHeader } from '../components/facilities/ResultsHeader';
 import { Pagination } from '../components/ui/Pagintation';
-import { regions, categories, servicesList, insurancesList } from '../data/mockData';
 
-export default function FacilitiesList({ facilities = [] }: { facilities: any[] }) {
+interface FacilitiesListProps {
+  facilities: any[];
+  regions:    any[];
+  categories: any[];
+  services:   any[];
+  insurances: any[];
+  filters?:   Record<string, string>;
+}
+
+export default function FacilitiesList({
+  facilities  = [],
+  regions     = [],
+  categories  = [],
+  services    = [],
+  insurances  = [],
+  filters     = {},
+}: FacilitiesListProps) {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  
+
   // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage]   = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  
+
   // Filter States
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
-  const [jciOnly, setJciOnly] = useState(false);
-  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [selectedInsurances, setSelectedInsurances] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('relevant');
+  const [searchQuery,        setSearchQuery]        = useState(filters.q            ?? '');
+  const [selectedLevels,     setSelectedLevels]     = useState<number[]>([]);
+  const [jciOnly,            setJciOnly]            = useState(false);
+  const [selectedRegions,    setSelectedRegions]    = useState<string[]>(
+    filters.region ? [filters.region] : []
+  );
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    filters.category ? [filters.category] : []
+  );
+  const [selectedServices,   setSelectedServices]   = useState<string[]>(
+    filters.service ? [filters.service] : []
+  );
+  const [selectedInsurances, setSelectedInsurances] = useState<string[]>(
+    filters.insurance ? [filters.insurance] : []
+  );
+  const [sortBy,             setSortBy]             = useState('relevant');
 
   // Responsive items per page
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 640) {
-        setItemsPerPage(5);
-      } else {
-        setItemsPerPage(10);
-      }
+      setItemsPerPage(window.innerWidth < 640 ? 5 : 10);
     };
-    
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -49,32 +67,12 @@ export default function FacilitiesList({ facilities = [] }: { facilities: any[] 
     setCurrentPage(1);
   }, [searchQuery, selectedLevels, jciOnly, selectedRegions, selectedCategories, selectedServices, selectedInsurances, sortBy]);
 
+  // Build flat service/insurance name lists from DB objects
+  const servicesList   = services.map((s: any) => s.name);
+  const insurancesList = insurances.map((i: any) => i.name);
+
   // Ensure facilities is an array
   const safeFacilities = Array.isArray(facilities) ? facilities : [];
-
-  // Initialize filters from URL params
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('q')) setSearchQuery(params.get('q') || '');
-      if (params.get('region')) setSelectedRegions([params.get('region') || '']);
-      if (params.get('service')) setSelectedServices([params.get('service') || '']);
-      if (params.get('level')) {
-        const lvl = parseInt(params.get('level') || '0');
-        if (lvl > 0) {
-          const levels = [];
-          for (let i = lvl; i <= 5; i++) levels.push(i);
-          setSelectedLevels(levels);
-        }
-      }
-      if (params.get('category')) setSelectedCategories([params.get('category') || '']);
-      
-      // Reset page to 1 when URL params change
-      setCurrentPage(1);
-    } catch (error) {
-      console.error('Error reading URL params:', error);
-    }
-  }, []);
 
   // Toggle helper
   const toggleArrayItem = (
@@ -103,38 +101,52 @@ export default function FacilitiesList({ facilities = [] }: { facilities: any[] 
     setSelectedInsurances([]);
   };
 
-  // Filter logic with safe error handling
-  let filteredFacilities = [];
+  // ── Client-side filter (on top of server-side results) ──────────────────
+  let filteredFacilities: any[] = [];
 
   try {
-    if (safeFacilities.length > 0) {
-      filteredFacilities = safeFacilities.filter((facility) => {
-        if (!facility) return false;
-        
-        if (searchQuery && !facility.name?.toLowerCase().includes(searchQuery.toLowerCase())) 
+    filteredFacilities = safeFacilities.filter((facility) => {
+      if (!facility) return false;
+
+      if (searchQuery &&
+          !facility.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+        return false;
+
+      if (selectedLevels.length > 0 &&
+          !selectedLevels.includes(facility.safeCareLevel))
+        return false;
+
+      if (jciOnly && !facility.jciAccredited)
+        return false;
+
+      if (selectedRegions.length > 0 &&
+          !selectedRegions.includes(facility.region))
+        return false;
+
+      if (selectedCategories.length > 0 &&
+          !selectedCategories.includes(facility.category))
+        return false;
+
+      if (selectedServices.length > 0) {
+        const fServices = Array.isArray(facility.services) ? facility.services : [];
+        if (!selectedServices.some((s) => fServices.includes(s)))
           return false;
-        if (selectedLevels.length > 0 && !selectedLevels.includes(facility.safeCareLevel)) 
+      }
+
+      if (selectedInsurances.length > 0) {
+        const fInsurances = Array.isArray(facility.insurances) ? facility.insurances : [];
+        if (!selectedInsurances.some((i) => fInsurances.includes(i)))
           return false;
-        if (jciOnly && !facility.jciAccredited) 
-          return false;
-        if (selectedRegions.length > 0 && !selectedRegions.includes(facility.region)) 
-          return false;
-        if (selectedCategories.length > 0 && !selectedCategories.includes(facility.category)) 
-          return false;
-        if (selectedServices.length > 0 && !selectedServices.some((s) => facility.services?.includes(s))) 
-          return false;
-        if (selectedInsurances.length > 0 && !selectedInsurances.some((i) => facility.insurances?.includes(i))) 
-          return false;
-        
-        return true;
-      });
-    }
+      }
+
+      return true;
+    });
   } catch (error) {
     console.error('Error filtering facilities:', error);
     filteredFacilities = [];
   }
 
-  // Sort logic with safe error handling
+  // ── Sort ─────────────────────────────────────────────────────────────────
   try {
     if (sortBy === 'level') {
       filteredFacilities.sort((a, b) => (b.safeCareLevel || 0) - (a.safeCareLevel || 0));
@@ -147,23 +159,23 @@ export default function FacilitiesList({ facilities = [] }: { facilities: any[] 
     console.error('Error sorting facilities:', error);
   }
 
-  // Pagination - Get current page items
-  const totalPages = Math.ceil(filteredFacilities.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  // ── Pagination ────────────────────────────────────────────────────────────
+  const totalPages          = Math.ceil(filteredFacilities.length / itemsPerPage);
+  const startIndex          = (currentPage - 1) * itemsPerPage;
   const paginatedFacilities = filteredFacilities.slice(startIndex, startIndex + itemsPerPage);
 
-  const activeFilterCount = selectedLevels.length + (jciOnly ? 1 : 0) +
+  const activeFilterCount =
+    selectedLevels.length + (jciOnly ? 1 : 0) +
     selectedRegions.length + selectedCategories.length +
-    selectedServices.length + selectedInsurances.length + (searchQuery ? 1 : 0);
+    selectedServices.length + selectedInsurances.length +
+    (searchQuery ? 1 : 0);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Smooth scroll to top of results
     setTimeout(() => {
-      const resultsElement = document.getElementById('results-header');
-      if (resultsElement) {
-        const yOffset = -80;
-        const y = resultsElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      const el = document.getElementById('results-header');
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.pageYOffset - 80;
         window.scrollTo({ top: y, behavior: 'smooth' });
       }
     }, 100);
@@ -184,7 +196,7 @@ export default function FacilitiesList({ facilities = [] }: { facilities: any[] 
     setSelectedInsurances,
     toggleArrayItem,
     clearFilters,
-    activeFilterCount
+    activeFilterCount,
   };
 
   return (
@@ -219,7 +231,13 @@ export default function FacilitiesList({ facilities = [] }: { facilities: any[] 
           {/* Desktop Sidebar */}
           <div className="hidden md:block w-72 shrink-0">
             <div className="sticky top-24">
-              <FilterSidebar {...filterProps} categories={categories} regions={regions} servicesList={servicesList} insurancesList={insurancesList} />
+              <FilterSidebar
+                {...filterProps}
+                categories={categories}
+                regions={regions}
+                servicesList={servicesList}
+                insurancesList={insurancesList}
+              />
             </div>
           </div>
 
@@ -258,7 +276,7 @@ export default function FacilitiesList({ facilities = [] }: { facilities: any[] 
                 {paginatedFacilities.length > 0 ? (
                   paginatedFacilities.map((facility, index) => (
                     <FacilityCard
-                      key={facility.id || index}
+                      key={facility.facility_id || facility.id || index}
                       facility={facility}
                       layout="horizontal"
                       index={index}
@@ -278,7 +296,8 @@ export default function FacilitiesList({ facilities = [] }: { facilities: any[] 
                       No facilities found
                     </h3>
                     <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                      We couldn't find any facilities matching your current filters. Try adjusting your search criteria.
+                      We couldn't find any facilities matching your current filters.
+                      Try adjusting your search criteria.
                     </p>
                     <button
                       onClick={clearFilters}
@@ -291,7 +310,7 @@ export default function FacilitiesList({ facilities = [] }: { facilities: any[] 
               </AnimatePresence>
             </div>
 
-            {/* Pagination Component */}
+            {/* Pagination */}
             {filteredFacilities.length > 0 && (
               <Pagination
                 currentPage={currentPage}

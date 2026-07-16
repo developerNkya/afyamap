@@ -9,9 +9,25 @@ interface FacilityServicesProps {
 const INITIAL_VISIBLE = 12;
 
 export const FacilityServices: React.FC<FacilityServicesProps> = ({ services }) => {
+  const safeServices = Array.isArray(services) ? services : [];
   const [showAll, setShowAll] = useState(false);
-  const visibleServices = showAll ? services : services.slice(0, INITIAL_VISIBLE);
-  const hasMore = services.length > INITIAL_VISIBLE;
+  const visibleServices = showAll ? safeServices : safeServices.slice(0, INITIAL_VISIBLE);
+  const hasMore = safeServices.length > INITIAL_VISIBLE;
+
+  if (safeServices.length === 0) {
+    return (
+      <motion.section
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: '-100px' }}
+        id="section-services"
+        className="scroll-mt-32 pt-4"
+      >
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Available Services</h2>
+        <p className="text-gray-400 text-sm">No services listed for this facility.</p>
+      </motion.section>
+    );
+  }
 
   return (
     <motion.section

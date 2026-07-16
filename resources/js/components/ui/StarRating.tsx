@@ -65,7 +65,7 @@ export const StarRating: React.FC<StarRatingProps> = ({
       <div
         className={`flex items-center gap-1 font-medium text-afya-text ${textSizes[size]}`}>
         
-        <span>{rating.toFixed(1)}</span>
+        <span>{(rating ?? 0).toFixed(1)}</span>
         {reviewCount !== undefined &&
         <span className="text-gray-500 font-normal">({reviewCount})</span>
         }

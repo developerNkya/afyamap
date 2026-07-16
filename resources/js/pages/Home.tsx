@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Layout } from '../components/layout/Layout';
-import { regions, categories, servicesList } from '../data/mockData';
 import { EducationalSection } from '../pages/Home/EducationContent';
 import { HeroSection } from '../pages/Home/HeroSection';
 import { FeaturedFacilities } from '../pages/Home/FeaturedFacilities';
@@ -12,13 +11,25 @@ import { CTASection } from '../pages/Home/CTASection';
 import { TestimonialsSection } from '../pages/Home/TestimonialsSection';
 import { ContactSection } from '../pages/Home/ContactSection';
 
-export default function Home({ facilities = [] }: { facilities: any[] }) {
+export default function Home({ 
+  facilities = [], 
+  regions = [], 
+  categories = [], 
+  services = [] 
+}: { 
+  facilities: any[], 
+  regions: any[], 
+  categories: any[], 
+  services: any[] 
+}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedService, setSelectedService] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const servicesList = services.map((s: any) => s.name);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

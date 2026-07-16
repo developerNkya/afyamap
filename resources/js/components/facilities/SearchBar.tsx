@@ -85,7 +85,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             >
               <option value="">All Regions</option>
               {regions.map((r) => (
-                <option key={r.slug} value={r.name}>{r.name}</option>
+                <option key={r.id ?? r.slug} value={r.name}>{r.name}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">

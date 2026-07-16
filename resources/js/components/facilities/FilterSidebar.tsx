@@ -103,7 +103,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Facility Type</h3>
           <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
             {categories.map((cat) => (
-              <label key={cat.slug} className="flex items-center gap-3 cursor-pointer group">
+              <label key={cat.id ?? cat.slug} className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   className="rounded border-gray-300 text-afya-deep focus:ring-afya-deep w-4 h-4 transition-colors"
@@ -123,7 +123,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Region</h3>
           <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
             {regions.map((reg) => (
-              <label key={reg.slug} className="flex items-center gap-3 cursor-pointer group">
+              <label key={reg.id ?? reg.slug} className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   className="rounded border-gray-300 text-afya-deep focus:ring-afya-deep w-4 h-4 transition-colors"

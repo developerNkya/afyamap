@@ -5,10 +5,11 @@ import { motion } from 'framer-motion';
 
 interface CategoryCardProps {
   category: {
-    slug: string;
+    id?: number | string;
+    slug?: string;
     name: string;
-    icon: string;
-    count: number;
+    icon?: string;
+    count?: number;
   };
   index?: number;
   layout?: 'grid' | 'list';

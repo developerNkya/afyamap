@@ -175,7 +175,7 @@ export const BrowseRegions: React.FC<BrowseRegionsProps> = ({ regions }) => {
               className={`grid ${getGridCols()} gap-3 sm:gap-4 md:gap-6`}
             >
               {paginatedRegions.map((region, index) => (
-                <RegionCard key={region.slug} region={region} index={index} />
+                <RegionCard key={region.id ?? region.slug} region={region} index={index} />
               ))}
             </motion.div>
           )}

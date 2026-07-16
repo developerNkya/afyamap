@@ -2,13 +2,12 @@ import React from 'react';
 import { MapPin, ArrowRight, Navigation, Shield } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Facility } from '../../data/mockData';
 import { SafeCareLevelIndicator } from './SafeCareLevelIndicator';
 import { JCIAccreditedBadge } from './JCIAccreditedBadge';
 import { StarRating } from './StarRating';
 
 interface FacilityCardProps {
-  facility: Facility;
+  facility: any;
   layout?: 'horizontal' | 'vertical';
   className?: string;
   index?: number;
@@ -109,7 +108,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
         {/* Services */}
         <div className="mb-4 sm:mb-5 flex-grow">
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
-            {facility.services.slice(0, 3).map((service, idx) => (
+            {(Array.isArray(facility.services) ? facility.services : []).slice(0, 3).map((service: string, idx: number) => (
               <span
                 key={idx}
                 className="text-[10px] sm:text-xs bg-gray-50 border border-gray-100 text-gray-600 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-medium truncate max-w-[80px] sm:max-w-none"
@@ -117,7 +116,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
                 {service.length > 12 ? service.substring(0, 10) + '...' : service}
               </span>
             ))}
-            {facility.services.length > 3 && (
+            {Array.isArray(facility.services) && facility.services.length > 3 && (
               <span className="text-[10px] sm:text-xs bg-gray-50 border border-gray-100 text-gray-500 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-medium">
                 +{facility.services.length - 3}
               </span>
@@ -133,8 +132,9 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
               Accepts
             </span>
             <span className="text-gray-600 font-medium truncate">
-              {facility.insurances.slice(0, 2).join(', ')}
-              {facility.insurances.length > 2 && ` +${facility.insurances.length - 2}`}
+              {Array.isArray(facility.insurances) && facility.insurances.length > 0
+                ? facility.insurances.slice(0, 2).join(', ') + (facility.insurances.length > 2 ? ` +${facility.insurances.length - 2}` : '')
+                : 'Various'}
             </span>
           </div>
           
@@ -147,7 +147,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
               <Navigation size={16} className="sm:w-4 sm:h-4" />
             </button>
             <Link
-              href={`/facility/${facility.id}`}
+              href={`/facility/${facility.facility_id ?? facility.id}`}
               className="group/btn flex items-center gap-1 bg-afya-deep text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-opacity-90 transition-all shadow-sm hover:shadow"
             >
               View Details

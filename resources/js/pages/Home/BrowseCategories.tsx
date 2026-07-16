@@ -172,7 +172,7 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
               className="space-y-2 sm:space-y-3"
             >
               {paginatedCategories.map((category, index) => (
-                <CategoryCard key={category.slug} category={category} layout="list" index={index} />
+                <CategoryCard key={category.id ?? category.slug} category={category} layout="list" index={index} />
               ))}
             </motion.div>
           ) : (
@@ -185,7 +185,7 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
               className={`grid ${getGridCols()} gap-3 sm:gap-4 md:gap-5`}
             >
               {paginatedCategories.map((category, index) => (
-                <CategoryCard key={category.slug} category={category} layout="grid" index={index} />
+                <CategoryCard key={category.id ?? category.slug} category={category} layout="grid" index={index} />
               ))}
             </motion.div>
           )}

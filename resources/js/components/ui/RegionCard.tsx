@@ -5,10 +5,11 @@ import { motion } from 'framer-motion';
 
 interface RegionCardProps {
   region: {
-    slug: string;
+    id?: number | string;
+    slug?: string;
     name: string;
-    icon: string;
-    count: number;
+    icon?: string;
+    count?: number;
   };
   index?: number;
 }
@@ -52,7 +53,7 @@ export const RegionCard: React.FC<RegionCardProps> = ({
           </div>
           
           <span className="text-xs sm:text-sm font-medium text-gray-500 bg-gray-50 px-2.5 sm:px-3 py-1 rounded-full border border-gray-100 group-hover:bg-afya-light group-hover:text-afya-deep group-hover:border-afya-mid/20 transition-colors mt-auto">
-            {region.count} Facilities
+            {region.count !== undefined ? `${region.count} Facilities` : 'Facilities'}
           </span>
         </div>
       </Link>

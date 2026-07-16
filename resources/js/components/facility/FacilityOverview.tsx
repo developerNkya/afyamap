@@ -53,21 +53,29 @@ export const FacilityOverview: React.FC<FacilityOverviewProps> = ({ facility }) 
           <MessageSquare className="text-afya-mid shrink-0" />
           <div>
             <div className="text-xs text-gray-500 uppercase font-semibold">Languages</div>
-            <div className="font-medium text-gray-900">{facility.languages.join(', ')}</div>
+            <div className="font-medium text-gray-900">
+              {Array.isArray(facility.languages) && facility.languages.length > 0
+                ? facility.languages.join(', ')
+                : 'Swahili, English'}
+            </div>
           </div>
         </div>
       </div>
 
       <h3 className="text-lg font-bold text-gray-800 mb-3">Insurance Accepted</h3>
       <div className="flex flex-wrap gap-2">
-        {facility.insurances.map((ins: string) => (
-          <span
-            key={ins}
-            className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 flex items-center gap-2 shadow-sm"
-          >
-            <CheckCircle2 size={16} className="text-green-500" /> {ins}
-          </span>
-        ))}
+        {Array.isArray(facility.insurances) && facility.insurances.length > 0 ? (
+          facility.insurances.map((ins: string) => (
+            <span
+              key={ins}
+              className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 flex items-center gap-2 shadow-sm"
+            >
+              <CheckCircle2 size={16} className="text-green-500" /> {ins}
+            </span>
+          ))
+        ) : (
+          <span className="text-gray-400 text-sm">Insurance information not available</span>
+        )}
       </div>
     </motion.section>
   );
