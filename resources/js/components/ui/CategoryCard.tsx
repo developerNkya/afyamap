@@ -28,8 +28,8 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
     return count.toString();
   };
 
-  // Direct link to /facilities – no query parameters
-  const facilitiesUrl = '/facilities';
+  // Link to /facilities filtered by this category name
+  const facilitiesUrl = `/facilities?category=${encodeURIComponent(category.name)}`;
 
   // LIST VIEW LAYOUT - Horizontal card for mobile
   if (layout === 'list') {

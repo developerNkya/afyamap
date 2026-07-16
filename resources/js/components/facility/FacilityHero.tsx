@@ -11,8 +11,7 @@ export const FacilityHero: React.FC<FacilityHeroProps> = ({ gallery, name }) => 
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Ensure we have at least 6 images (use fallbacks if needed)
-  const safeGallery = gallery?.length >= 3 ? gallery : [
+  const defaultImages = [
     'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800',
     'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800',
     'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=800',
@@ -20,6 +19,14 @@ export const FacilityHero: React.FC<FacilityHeroProps> = ({ gallery, name }) => 
     'https://images.unsplash.com/photo-1504813184591-01572f98c85f?auto=format&fit=crop&q=80&w=800',
     'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800'
   ];
+
+  const dbGallery = Array.isArray(gallery) ? gallery.filter(Boolean) : [];
+  const safeGallery = dbGallery.length > 0 ? [...dbGallery] : [...defaultImages];
+
+  // Pad the gallery to ensure we have at least 3 images for the layout
+  while (safeGallery.length < 3) {
+    safeGallery.push(defaultImages[safeGallery.length % defaultImages.length]);
+  }
 
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index);

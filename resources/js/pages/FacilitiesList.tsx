@@ -1,5 +1,6 @@
-// pages/FacilitiesList.tsx - Connected to DB (normalized schema)
-import React, { useState, useEffect } from 'react';
+// pages/FacilitiesList.tsx - Server-side filtering via Inertia router
+import React, { useState, useEffect, useCallback } from 'react';
+import { router } from '@inertiajs/react';
 import { Layout } from '../components/layout/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search } from 'lucide-react';
@@ -30,11 +31,12 @@ export default function FacilitiesList({
 }: FacilitiesListProps) {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
-  // Pagination State
+  // Pagination State (client-side only — server returns all matches)
   const [currentPage, setCurrentPage]   = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [sortBy, setSortBy]             = useState('relevant');
 
-  // Filter States
+  // ── Filter state — synced to server via Inertia router ──────────────────
   const [searchQuery,        setSearchQuery]        = useState(filters.q            ?? '');
   const [selectedLevels,     setSelectedLevels]     = useState<number[]>([]);
   const [jciOnly,            setJciOnly]            = useState(false);
@@ -50,7 +52,6 @@ export default function FacilitiesList({
   const [selectedInsurances, setSelectedInsurances] = useState<string[]>(
     filters.insurance ? [filters.insurance] : []
   );
-  const [sortBy,             setSortBy]             = useState('relevant');
 
   // Responsive items per page
   useEffect(() => {
@@ -62,35 +63,65 @@ export default function FacilitiesList({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedLevels, jciOnly, selectedRegions, selectedCategories, selectedServices, selectedInsurances, sortBy]);
+  // Reset page when data changes
+  useEffect(() => { setCurrentPage(1); }, [facilities]);
 
-  // Build flat service/insurance name lists from DB objects
+  // ── Push filters to server via Inertia ───────────────────────────────────
+  const applyServerFilters = useCallback((overrides: Record<string, any> = {}) => {
+    const params: Record<string, string> = {};
+
+    const q = overrides.q !== undefined ? overrides.q : searchQuery;
+    if (q) params.q = q;
+
+    const regions = overrides.regions !== undefined ? overrides.regions : selectedRegions;
+    if (regions.length === 1) params.region = regions[0];
+
+    const cats = overrides.categories !== undefined ? overrides.categories : selectedCategories;
+    if (cats.length === 1) params.category = cats[0];
+
+    const srvs = overrides.services !== undefined ? overrides.services : selectedServices;
+    if (srvs.length === 1) params.service = srvs[0];
+
+    const ins = overrides.insurances !== undefined ? overrides.insurances : selectedInsurances;
+    if (ins.length === 1) params.insurance = ins[0];
+
+    router.get('/facilities', params, {
+      preserveScroll: true,
+      preserveState: true,
+    });
+  }, [searchQuery, selectedRegions, selectedCategories, selectedServices, selectedInsurances]);
+
+  // Build flat service/insurance name lists
   const servicesList   = services.map((s: any) => s.name);
   const insurancesList = insurances.map((i: any) => i.name);
 
   // Ensure facilities is an array
   const safeFacilities = Array.isArray(facilities) ? facilities : [];
 
-  // Toggle helper
+  // Toggle helper — updates local state and fires server request
   const toggleArrayItem = (
     array: any[],
     setArray: React.Dispatch<React.SetStateAction<any[]>>,
     item: any
   ) => {
-    try {
-      if (array.includes(item)) {
-        setArray(array.filter((i) => i !== item));
-      } else {
-        setArray([...array, item]);
-      }
-    } catch (error) {
-      console.error('Error toggling filter:', error);
+    const next = array.includes(item)
+      ? array.filter((i) => i !== item)
+      : [...array, item];
+    setArray(next);
+
+    // Determine which filter this is and push to server
+    if (setArray === setSelectedRegions) {
+      applyServerFilters({ regions: next });
+    } else if (setArray === setSelectedCategories) {
+      applyServerFilters({ categories: next });
+    } else if (setArray === setSelectedServices) {
+      applyServerFilters({ services: next });
+    } else if (setArray === setSelectedInsurances) {
+      applyServerFilters({ insurances: next });
     }
   };
 
+  // Clear ALL filters — navigate to clean /facilities
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedLevels([]);
@@ -99,67 +130,38 @@ export default function FacilitiesList({
     setSelectedCategories([]);
     setSelectedServices([]);
     setSelectedInsurances([]);
+    router.get('/facilities', {}, { preserveScroll: false });
   };
 
-  // ── Client-side filter (on top of server-side results) ──────────────────
-  let filteredFacilities: any[] = [];
+  // Handle search submit
+  const handleSearch = (q: string) => {
+    setSearchQuery(q);
+    applyServerFilters({ q });
+  };
 
-  try {
-    filteredFacilities = safeFacilities.filter((facility) => {
-      if (!facility) return false;
+  // ── Client-side: sort + JCI + level (fast, no round-trip) ────────────────
+  let filteredFacilities = [...safeFacilities];
 
-      if (searchQuery &&
-          !facility.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-        return false;
-
-      if (selectedLevels.length > 0 &&
-          !selectedLevels.includes(facility.safeCareLevel))
-        return false;
-
-      if (jciOnly && !facility.jciAccredited)
-        return false;
-
-      if (selectedRegions.length > 0 &&
-          !selectedRegions.includes(facility.region))
-        return false;
-
-      if (selectedCategories.length > 0 &&
-          !selectedCategories.includes(facility.category))
-        return false;
-
-      if (selectedServices.length > 0) {
-        const fServices = Array.isArray(facility.services) ? facility.services : [];
-        if (!selectedServices.some((s) => fServices.includes(s)))
-          return false;
-      }
-
-      if (selectedInsurances.length > 0) {
-        const fInsurances = Array.isArray(facility.insurances) ? facility.insurances : [];
-        if (!selectedInsurances.some((i) => fInsurances.includes(i)))
-          return false;
-      }
-
-      return true;
-    });
-  } catch (error) {
-    console.error('Error filtering facilities:', error);
-    filteredFacilities = [];
+  if (selectedLevels.length > 0) {
+    filteredFacilities = filteredFacilities.filter(f =>
+      selectedLevels.includes(f.safeCareLevel)
+    );
   }
 
-  // ── Sort ─────────────────────────────────────────────────────────────────
-  try {
-    if (sortBy === 'level') {
-      filteredFacilities.sort((a, b) => (b.safeCareLevel || 0) - (a.safeCareLevel || 0));
-    } else if (sortBy === 'rating') {
-      filteredFacilities.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (sortBy === 'name') {
-      filteredFacilities.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    }
-  } catch (error) {
-    console.error('Error sorting facilities:', error);
+  if (jciOnly) {
+    filteredFacilities = filteredFacilities.filter(f => f.jciAccredited);
   }
 
-  // ── Pagination ────────────────────────────────────────────────────────────
+  // Sort
+  if (sortBy === 'level') {
+    filteredFacilities.sort((a, b) => (b.safeCareLevel || 0) - (a.safeCareLevel || 0));
+  } else if (sortBy === 'rating') {
+    filteredFacilities.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  } else if (sortBy === 'name') {
+    filteredFacilities.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }
+
+  // ── Pagination ─────────────────────────────────────────────────────────────
   const totalPages          = Math.ceil(filteredFacilities.length / itemsPerPage);
   const startIndex          = (currentPage - 1) * itemsPerPage;
   const paginatedFacilities = filteredFacilities.slice(startIndex, startIndex + itemsPerPage);
@@ -187,13 +189,25 @@ export default function FacilitiesList({
     jciOnly,
     setJciOnly,
     selectedRegions,
-    setSelectedRegions,
+    setSelectedRegions: (next: string[]) => {
+      setSelectedRegions(next);
+      applyServerFilters({ regions: next });
+    },
     selectedCategories,
-    setSelectedCategories,
+    setSelectedCategories: (next: string[]) => {
+      setSelectedCategories(next);
+      applyServerFilters({ categories: next });
+    },
     selectedServices,
-    setSelectedServices,
+    setSelectedServices: (next: string[]) => {
+      setSelectedServices(next);
+      applyServerFilters({ services: next });
+    },
     selectedInsurances,
-    setSelectedInsurances,
+    setSelectedInsurances: (next: string[]) => {
+      setSelectedInsurances(next);
+      applyServerFilters({ insurances: next });
+    },
     toggleArrayItem,
     clearFilters,
     activeFilterCount,
@@ -205,11 +219,17 @@ export default function FacilitiesList({
         {/* Search Bar */}
         <SearchBar
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          setSearchQuery={handleSearch}
           selectedRegions={selectedRegions}
-          setSelectedRegions={setSelectedRegions}
+          setSelectedRegions={(next: string[]) => {
+            setSelectedRegions(next);
+            applyServerFilters({ regions: next });
+          }}
           selectedServices={selectedServices}
-          setSelectedServices={setSelectedServices}
+          setSelectedServices={(next: string[]) => {
+            setSelectedServices(next);
+            applyServerFilters({ services: next });
+          }}
           selectedLevels={selectedLevels}
           setSelectedLevels={setSelectedLevels}
           regions={regions}
@@ -265,9 +285,18 @@ export default function FacilitiesList({
               toggleArrayItem={toggleArrayItem}
               setJciOnly={setJciOnly}
               setSelectedLevels={setSelectedLevels}
-              setSelectedRegions={setSelectedRegions}
-              setSelectedCategories={setSelectedCategories}
-              setSelectedServices={setSelectedServices}
+              setSelectedRegions={(next: string[]) => {
+                setSelectedRegions(next);
+                applyServerFilters({ regions: next });
+              }}
+              setSelectedCategories={(next: string[]) => {
+                setSelectedCategories(next);
+                applyServerFilters({ categories: next });
+              }}
+              setSelectedServices={(next: string[]) => {
+                setSelectedServices(next);
+                applyServerFilters({ services: next });
+              }}
             />
 
             {/* Results List */}

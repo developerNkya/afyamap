@@ -284,9 +284,12 @@ class PageController extends Controller
      */
     private function mapFacility($row): array
     {
-        $logo = $row->logo
-            ? asset('uploads/facilities/' . $row->logo)
-            : null;
+        $logo = null;
+        if (!empty($row->logo)) {
+            // Images live in the demo project's public/uploads/facilities/
+            // served via symlink public/uploads -> demo/public/uploads
+            $logo = '/uploads/facilities/' . $row->logo;
+        }
 
         // Build a human-readable hours string
         $hours = null;
@@ -388,15 +391,23 @@ class PageController extends Controller
     /** Filter option helpers */
     private function getRegions(): array
     {
+        // Count active facilities per region
+        $counts = DB::table('tbl_facilities')
+            ->where('status', 1)
+            ->whereNotNull('region_id')
+            ->select('region_id', DB::raw('COUNT(*) as cnt'))
+            ->groupBy('region_id')
+            ->pluck('cnt', 'region_id');
+
         return Region::where('status', 1)
             ->orderBy('name')
             ->get(['region_id', 'name'])
             ->map(fn($r) => [
                 'id'    => $r->region_id,
-                'slug'  => $r->region_id,   // used as key in frontend
+                'slug'  => $r->region_id,
                 'name'  => $r->name,
                 'icon'  => 'MapPin',
-                'count' => 0,
+                'count' => (int) ($counts[$r->region_id] ?? 0),
             ])
             ->values()
             ->all();
@@ -404,6 +415,14 @@ class PageController extends Controller
 
     private function getCategories(): array
     {
+        // Count active facilities per category
+        $counts = DB::table('tbl_facilities')
+            ->where('status', 1)
+            ->whereNotNull('category_id')
+            ->select('category_id', DB::raw('COUNT(*) as cnt'))
+            ->groupBy('category_id')
+            ->pluck('cnt', 'category_id');
+
         return FacilityCategory::orderBy('name')
             ->get(['category_id', 'name'])
             ->map(fn($c) => [
@@ -411,7 +430,7 @@ class PageController extends Controller
                 'slug'  => $c->category_id,
                 'name'  => $c->name,
                 'icon'  => 'Building2',
-                'count' => 0,
+                'count' => (int) ($counts[$c->category_id] ?? 0),
             ])
             ->values()
             ->all();
