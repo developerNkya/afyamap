@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\Insurance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class PageController extends Controller
@@ -208,11 +209,69 @@ class PageController extends Controller
             $gallery = [asset('uploads/facilities/' . $row->logo)];
         }
 
-        $facility = array_merge($this->mapFacility($row), [
+        // ── Dynamic Comments & Ratings ───────────────────────────────────────
+        $comments = DB::table('tbl_user_comments as c')
+            ->join('tbl_users as u', 'u.user_id', '=', 'c.user_id')
+            ->leftJoin('tbl_user_ratings as r', function($join) use ($id) {
+                $join->on('r.user_id', '=', 'c.user_id')
+                     ->where('r.facility_id', '=', $id);
+            })
+            ->where('c.facility_id', $id)
+            ->where('c.status', 1)
+            ->orderBy('c.created_at', 'desc')
+            ->select([
+                'c.comment_id as id',
+                'c.comment as text',
+                'c.created_at',
+                'u.name',
+                'u.user_image',
+                'r.rating'
+            ])
+            ->get()
+            ->map(function($c) {
+                $words = explode(' ', $c->name);
+                $initials = '';
+                foreach ($words as $w) {
+                    $initials .= strtoupper(substr($w, 0, 1));
+                }
+                $c->initials = substr($initials, 0, 2);
+                $c->date = \Carbon\Carbon::parse($c->created_at)->diffForHumans();
+                return $c;
+            });
+
+        $ratingsGroup = DB::table('tbl_user_ratings')
+            ->where('facility_id', $id)
+            ->select('rating', DB::raw('count(*) as count'))
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->all();
+
+        $totalRatings = array_sum($ratingsGroup);
+        $ratingDistribution = [];
+        for ($i = 5; $i >= 1; $i--) {
+            $count = $ratingsGroup[$i] ?? 0;
+            $ratingDistribution[$i] = $totalRatings > 0 ? round(($count / $totalRatings) * 100) : 0;
+        }
+
+        $avgRating = DB::table('tbl_user_ratings')
+            ->where('facility_id', $id)
+            ->avg('rating');
+
+        $ratingCount = DB::table('tbl_user_ratings')
+            ->where('facility_id', $id)
+            ->count();
+            
+        $facilityRating = $ratingCount > 0 ? round($avgRating, 1) : (float)($row->average_rating ?? 0.0);
+        $facilityReviewCount = $ratingCount > 0 ? $ratingCount : (int)($row->total_reviews ?? 0);
+
+        $mappedFacility = $this->mapFacility($row);
+        $mappedFacility['rating'] = $facilityRating;
+        $mappedFacility['reviewCount'] = $facilityReviewCount;
+
+        $facility = array_merge($mappedFacility, [
             'services'   => $services,
             'insurances' => $insurances,
             'gallery'    => $gallery,
-            // Extra detail fields
             'description' => null,
             'open_time'   => $row->open_time   ?? null,
             'close_time'  => $row->close_time  ?? null,
@@ -222,7 +281,57 @@ class PageController extends Controller
             'languages'   => [],
         ]);
 
-        return Inertia::render('FacilityDetail', ['facility' => $facility]);
+        return Inertia::render('FacilityDetail', [
+            'facility' => $facility,
+            'comments' => $comments,
+            'ratingDistribution' => $ratingDistribution
+        ]);
+    }
+
+    /**
+     * Store facility review and comment from authenticated users.
+     */
+    public function storeReview(Request $request, $id)
+    {
+        $request->validate([
+            'rating'  => 'required|integer|min:1|max:5',
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        $userId = Auth::id();
+
+        // 1. Update/insert rating in tbl_user_ratings
+        DB::table('tbl_user_ratings')->updateOrInsert(
+            ['facility_id' => $id, 'user_id' => $userId],
+            ['rating' => $request->rating, 'created_at' => now()]
+        );
+
+        // 2. Insert comment in tbl_user_comments
+        DB::table('tbl_user_comments')->insert([
+            'facility_id' => $id,
+            'user_id'     => $userId,
+            'comment'     => $request->comment,
+            'status'      => 1,
+            'created_at'  => now(),
+        ]);
+
+        // 3. Update facility's average_rating and total_reviews
+        $avgRating = DB::table('tbl_user_ratings')
+            ->where('facility_id', $id)
+            ->avg('rating');
+
+        $ratingCount = DB::table('tbl_user_ratings')
+            ->where('facility_id', $id)
+            ->count();
+
+        DB::table('tbl_facilities')
+            ->where('facility_id', $id)
+            ->update([
+                'average_rating' => round($avgRating, 2),
+                'total_reviews'  => $ratingCount
+            ]);
+
+        return redirect()->back()->with('success', 'Thank you! Your review has been submitted successfully.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────

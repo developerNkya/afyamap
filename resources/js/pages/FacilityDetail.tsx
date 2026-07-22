@@ -11,7 +11,17 @@ import { FacilityReviews } from '../components/facility/FacilityReviews';
 import { FacilitySidebar } from '../components/facility/FacilitySidebar';
 import { StickyTopBar } from '../components/facility/StickyTopBar';
 
-export default function FacilityDetail({ facility }: { facility: any }) {
+export default function FacilityDetail({ 
+  facility, 
+  comments = [], 
+  ratingDistribution = {},
+  auth 
+}: { 
+  facility: any; 
+  comments?: any[]; 
+  ratingDistribution?: any;
+  auth: any;
+}) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isSticky, setIsSticky] = useState(false);
 
@@ -58,7 +68,12 @@ export default function FacilityDetail({ facility }: { facility: any }) {
             <FacilityOverview facility={facility} />
             <FacilityServices services={facility.services} />
             <FacilitySafety facility={facility} />
-            <FacilityReviews facility={facility} />
+            <FacilityReviews 
+              facility={facility} 
+              comments={comments} 
+              ratingDistribution={ratingDistribution}
+              auth={auth}
+            />
           </div>
 
           {/* Sidebar Area */}

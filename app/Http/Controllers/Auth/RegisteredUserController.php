@@ -36,16 +36,26 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        $username = explode('@', $request->email)[0];
+        $count = User::where('username', $username)->count();
+        if ($count > 0) {
+            $username = $username . '_' . rand(100, 999);
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'username' => $username,
             'password' => Hash::make($request->password),
+            'role_id' => 4, // Viewer
+            'is_active' => 1,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return to_route('dashboard');
+        // Redirect back so Inertia can update page state
+        return redirect()->back();
     }
 }
