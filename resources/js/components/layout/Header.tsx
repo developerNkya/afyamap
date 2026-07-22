@@ -17,11 +17,12 @@ export const Header: React.FC = () => {
     return (
         <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex h-20 items-center justify-between">
-                    {/* Logo - Better fitting for 549x455 image */}
-                    <Link href="/" className="flex flex-shrink-0 items-center">
+                {/* Increased height from h-20 to h-24 and added py-2 for more vertical padding */}
+                <div className="flex h-24 items-center justify-between py-2">
+                    {/* Logo with navigate image below - aligned left */}
+                    <Link href="/" className="flex flex-shrink-0 flex-col items-start">
                         <img
-                            src="/images/logo/logo6.png"
+                            src="/images/logo/logo8.png"
                             alt="AfyaMap"
                             className="h-15 w-auto object-contain md:h-14 lg:h-16"
                             style={{
@@ -29,6 +30,20 @@ export const Header: React.FC = () => {
                                 minWidth: '140px',
                             }}
                         />
+                        {/* Navigate image below logo - aligned to the same left edge */}
+                        <div className="mt-0.5 flex items-center">
+                            <img
+                                src="/images/logo/navigate.png"
+                                alt="Navigate"
+                                className="h-auto w-auto object-contain"
+                                style={{
+                                    maxWidth: '140px',
+                                    height: '20px',
+                                    position: 'relative',
+                                    left: '23px',
+                                }}
+                            />
+                        </div>
                     </Link>
 
                     {/* Desktop Nav */}
