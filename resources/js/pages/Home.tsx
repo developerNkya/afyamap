@@ -1,84 +1,104 @@
-import React, { useState } from 'react';
+// pages/Home.tsx
 import { router } from '@inertiajs/react';
+import React, { useState } from 'react';
 import { Layout } from '../components/layout/Layout';
-import { EducationalSection } from '../pages/Home/EducationContent';
-import { HeroSection } from '../pages/Home/HeroSection';
-import { FeaturedFacilities } from '../pages/Home/FeaturedFacilities';
 import { BrowseCategories } from '../pages/Home/BrowseCategories';
 import { BrowseRegions } from '../pages/Home/BrowseRegions';
+import { EducationalSection } from '../pages/Home/EducationContent';
+import { FeaturedFacilities } from '../pages/Home/FeaturedFacilities';
+import { HeroSection } from '../pages/Home/HeroSection';
 import { StatsSection } from '../pages/Home/StatsSection';
-import { CTASection } from '../pages/Home/CTASection';
 import { TestimonialsSection } from '../pages/Home/TestimonialsSection';
-import { ContactSection } from '../pages/Home/ContactSection';
 
-export default function Home({ 
-  facilities = [], 
-  regions = [], 
-  categories = [], 
-  services = [] 
-}: { 
-  facilities: any[], 
-  regions: any[], 
-  categories: any[], 
-  services: any[] 
+export default function Home({
+    facilities = [],
+    regions = [],
+    categories = [],
+    services = [],
+    insurances = [],
+}: {
+    facilities: any[];
+    regions: any[];
+    categories: any[];
+    services: any[];
+    insurances?: any[];
 }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [selectedService, setSelectedService] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedRegion, setSelectedRegion] = useState('');
+    const [selectedService, setSelectedService] = useState('');
+    const [selectedLevel, setSelectedLevel] = useState('');
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [currentSlide, setCurrentSlide] = useState(0);
 
-  const servicesList = services.map((s: any) => s.name);
+    // Advanced filter states
+    const [selectedInsurance, setSelectedInsurance] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [jciOnly, setJciOnly] = useState(false);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchQuery) params.append('q', searchQuery);
-    if (selectedRegion) params.append('region', selectedRegion);
-    if (selectedService) params.append('service', selectedService);
-    if (selectedLevel) params.append('level', selectedLevel);
-    router.get(`/facilities?${params.toString()}`);
-  };
+    const servicesList = services.map((s: any) => s.name);
 
-  return (
-    <div className="flex flex-col min-h-screen">
-      <HeroSection
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedRegion={selectedRegion}
-        setSelectedRegion={setSelectedRegion}
-        selectedService={selectedService}
-        setSelectedService={setSelectedService}
-        selectedLevel={selectedLevel}
-        setSelectedLevel={setSelectedLevel}
-        showAdvanced={showAdvanced}
-        setShowAdvanced={setShowAdvanced}
-        handleSearch={handleSearch}
-        regions={regions}
-        servicesList={servicesList}
-        categories={categories}
-      />
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('q', searchQuery);
+        if (selectedRegion) params.append('region', selectedRegion);
+        if (selectedService) params.append('service', selectedService);
+        if (selectedLevel) params.append('level', selectedLevel);
+        if (selectedInsurance) params.append('insurance', selectedInsurance);
+        if (selectedCategory) params.append('category', selectedCategory);
+        if (jciOnly) params.append('jci', '1');
+        router.get(`/facilities?${params.toString()}`);
+    };
 
-      <EducationalSection currentSlide={currentSlide} setCurrentSlide={setCurrentSlide} />
+    // Debug log - remove after confirming it works
+    console.log('🏥 Home Page Data:', {
+        facilities: facilities.length,
+        regions: regions.length,
+        categories: categories.length,
+        services: services.length,
+        insurances: insurances.length,
+        insuranceList: insurances,
+    });
 
-      <FeaturedFacilities facilities={facilities} />
+    return (
+        <div className="flex min-h-screen flex-col">
+            <HeroSection
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                selectedRegion={selectedRegion}
+                setSelectedRegion={setSelectedRegion}
+                selectedService={selectedService}
+                setSelectedService={setSelectedService}
+                selectedLevel={selectedLevel}
+                setSelectedLevel={setSelectedLevel}
+                showAdvanced={showAdvanced}
+                setShowAdvanced={setShowAdvanced}
+                handleSearch={handleSearch}
+                regions={regions}
+                servicesList={servicesList}
+                categories={categories}
+                insurances={insurances}
+                selectedInsurance={selectedInsurance}
+                setSelectedInsurance={setSelectedInsurance}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                jciOnly={jciOnly}
+                setJciOnly={setJciOnly}
+            />
 
-      <BrowseCategories categories={categories} />
+            <EducationalSection currentSlide={currentSlide} setCurrentSlide={setCurrentSlide} />
 
-      <BrowseRegions regions={regions} />
+            <FeaturedFacilities facilities={facilities} />
 
-      <StatsSection />
+            <BrowseCategories categories={categories} />
 
-      {/* NEW: Testimonials Section */}
-      <TestimonialsSection />
+            <BrowseRegions regions={regions} />
 
-      {/* NEW: Contact Section */}
-      {/* <ContactSection /> */}
+            <StatsSection />
 
-      {/* <CTASection /> */}
-    </div>
-  );
+            <TestimonialsSection />
+        </div>
+    );
 }
 
 Home.layout = (page: React.ReactNode) => <Layout>{page}</Layout>;

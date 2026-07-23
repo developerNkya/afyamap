@@ -11,6 +11,7 @@ import { SearchBar } from '../components/facilities/SearchBar';
 import { Layout } from '../components/layout/Layout';
 import { FacilityCard } from '../components/ui/FacilityCard';
 import { Pagination } from '../components/ui/Pagintation';
+import { QualityFilter } from '../pages/Home/QualityFilter'; // Import QualityFilter
 
 interface FacilitiesListProps {
     facilities: any[];
@@ -38,12 +39,15 @@ export default function FacilitiesList({
 
     // ── Filter state — synced to server via Inertia router ──────────────────
     const [searchQuery, setSearchQuery] = useState(filters.q ?? '');
-    const [selectedLevels, setSelectedLevels] = useState<number[]>([]);
-    const [jciOnly, setJciOnly] = useState(false);
+    const [selectedLevel, setSelectedLevel] = useState(filters.level ?? '');
+    const [jciOnly, setJciOnly] = useState(filters.jci === '1' ?? false);
     const [selectedRegions, setSelectedRegions] = useState<string[]>(filters.region ? [filters.region] : []);
     const [selectedCategories, setSelectedCategories] = useState<string[]>(filters.category ? [filters.category] : []);
     const [selectedServices, setSelectedServices] = useState<string[]>(filters.service ? [filters.service] : []);
     const [selectedInsurances, setSelectedInsurances] = useState<string[]>(filters.insurance ? [filters.insurance] : []);
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [selectedInsurance, setSelectedInsurance] = useState(filters.insurance || '');
+    const [selectedCategory, setSelectedCategory] = useState(filters.category || '');
 
     // Responsive items per page
     useEffect(() => {
@@ -80,12 +84,19 @@ export default function FacilitiesList({
             const ins = overrides.insurances !== undefined ? overrides.insurances : selectedInsurances;
             if (ins.length === 1) params.insurance = ins[0];
 
+            // Quality filters
+            const level = overrides.level !== undefined ? overrides.level : selectedLevel;
+            if (level) params.level = level;
+
+            const jci = overrides.jci !== undefined ? overrides.jci : jciOnly;
+            if (jci) params.jci = '1';
+
             router.get('/facilities', params, {
                 preserveScroll: true,
                 preserveState: true,
             });
         },
-        [searchQuery, selectedRegions, selectedCategories, selectedServices, selectedInsurances],
+        [searchQuery, selectedRegions, selectedCategories, selectedServices, selectedInsurances, selectedLevel, jciOnly],
     );
 
     // Build flat service/insurance name lists
@@ -115,12 +126,14 @@ export default function FacilitiesList({
     // Clear ALL filters — navigate to clean /facilities
     const clearFilters = () => {
         setSearchQuery('');
-        setSelectedLevels([]);
+        setSelectedLevel('');
         setJciOnly(false);
         setSelectedRegions([]);
         setSelectedCategories([]);
         setSelectedServices([]);
         setSelectedInsurances([]);
+        setSelectedInsurance('');
+        setSelectedCategory('');
         router.get('/facilities', {}, { preserveScroll: false });
     };
 
@@ -133,8 +146,10 @@ export default function FacilitiesList({
     // ── Client-side: sort + JCI + level (fast, no round-trip) ────────────────
     let filteredFacilities = [...safeFacilities];
 
-    if (selectedLevels.length > 0) {
-        filteredFacilities = filteredFacilities.filter((f) => selectedLevels.includes(f.safeCareLevel));
+    // Apply level filter
+    if (selectedLevel) {
+        const levelNum = parseInt(selectedLevel);
+        filteredFacilities = filteredFacilities.filter((f) => f.safeCareLevel >= levelNum);
     }
 
     if (jciOnly) {
@@ -156,7 +171,7 @@ export default function FacilitiesList({
     const paginatedFacilities = filteredFacilities.slice(startIndex, startIndex + itemsPerPage);
 
     const activeFilterCount =
-        selectedLevels.length +
+        (selectedLevel ? 1 : 0) +
         (jciOnly ? 1 : 0) +
         selectedRegions.length +
         selectedCategories.length +
@@ -175,11 +190,25 @@ export default function FacilitiesList({
         }, 100);
     };
 
+    // Handle quality filter changes
+    const handleQualityChange = (level: string, jci: boolean) => {
+        setSelectedLevel(level);
+        setJciOnly(jci);
+        applyServerFilters({ level, jci });
+    };
+
     const filterProps = {
-        selectedLevels,
-        setSelectedLevels,
+        selectedLevels: selectedLevel ? [parseInt(selectedLevel)] : [],
+        setSelectedLevels: (levels: number[]) => {
+            const newLevel = levels.length > 0 ? levels[0].toString() : '';
+            setSelectedLevel(newLevel);
+            applyServerFilters({ level: newLevel });
+        },
         jciOnly,
-        setJciOnly,
+        setJciOnly: (jci: boolean) => {
+            setJciOnly(jci);
+            applyServerFilters({ jci });
+        },
         selectedRegions,
         setSelectedRegions: (next: string[]) => {
             setSelectedRegions(next);
@@ -222,14 +251,61 @@ export default function FacilitiesList({
                         setSelectedServices(next);
                         applyServerFilters({ services: next });
                     }}
-                    selectedLevels={selectedLevels}
-                    setSelectedLevels={setSelectedLevels}
+                    selectedLevels={selectedLevel ? [parseInt(selectedLevel)] : []}
+                    setSelectedLevels={(levels: number[]) => {
+                        const newLevel = levels.length > 0 ? levels[0].toString() : '';
+                        setSelectedLevel(newLevel);
+                        applyServerFilters({ level: newLevel });
+                    }}
                     regions={regions}
                     servicesList={servicesList}
                 />
 
+                {/* Quality Filter - Same as Home page */}
+                <div className="mt-4">
+                    <QualityFilter
+                        selectedLevel={selectedLevel}
+                        setSelectedLevel={(level: string) => {
+                            setSelectedLevel(level);
+                            applyServerFilters({ level });
+                        }}
+                        showAdvanced={showAdvanced}
+                        setShowAdvanced={setShowAdvanced}
+                        categories={categories}
+                        insurances={insurances}
+                        selectedInsurance={selectedInsurance}
+                        setSelectedInsurance={(insurance: string) => {
+                            setSelectedInsurance(insurance);
+                            // If insurance is selected, add to filters
+                            if (insurance) {
+                                setSelectedInsurances([insurance]);
+                                applyServerFilters({ insurances: [insurance] });
+                            } else {
+                                setSelectedInsurances([]);
+                                applyServerFilters({ insurances: [] });
+                            }
+                        }}
+                        selectedCategory={selectedCategory}
+                        setSelectedCategory={(category: string) => {
+                            setSelectedCategory(category);
+                            if (category) {
+                                setSelectedCategories([category]);
+                                applyServerFilters({ categories: [category] });
+                            } else {
+                                setSelectedCategories([]);
+                                applyServerFilters({ categories: [] });
+                            }
+                        }}
+                        jciOnly={jciOnly}
+                        setJciOnly={(jci: boolean) => {
+                            setJciOnly(jci);
+                            applyServerFilters({ jci });
+                        }}
+                    />
+                </div>
+
                 {/* Header with ID for smooth scroll */}
-                <div id="results-header">
+                <div id="results-header" className="mt-4">
                     <ResultsHeader
                         resultCount={filteredFacilities.length}
                         activeFilterCount={activeFilterCount}
@@ -239,7 +315,7 @@ export default function FacilitiesList({
                     />
                 </div>
 
-                <div className="flex flex-col gap-8 md:flex-row">
+                <div className="mt-4 flex flex-col gap-8 md:flex-row">
                     {/* Desktop Sidebar */}
                     <div className="hidden w-72 shrink-0 md:block">
                         <div className="sticky top-24">
@@ -269,14 +345,18 @@ export default function FacilitiesList({
                     <div className="flex-grow">
                         {/* Active Filters Chips */}
                         <FilterChips
-                            selectedLevels={selectedLevels}
+                            selectedLevels={selectedLevel ? [parseInt(selectedLevel)] : []}
                             jciOnly={jciOnly}
                             selectedRegions={selectedRegions}
                             selectedCategories={selectedCategories}
                             selectedServices={selectedServices}
                             toggleArrayItem={toggleArrayItem}
                             setJciOnly={setJciOnly}
-                            setSelectedLevels={setSelectedLevels}
+                            setSelectedLevels={(levels: number[]) => {
+                                const newLevel = levels.length > 0 ? levels[0].toString() : '';
+                                setSelectedLevel(newLevel);
+                                applyServerFilters({ level: newLevel });
+                            }}
                             setSelectedRegions={(next: string[]) => {
                                 setSelectedRegions(next);
                                 applyServerFilters({ regions: next });

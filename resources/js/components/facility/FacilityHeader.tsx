@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Award, Clock, MapPin, Navigation, Phone, Share2, Star } from 'lucide-react';
 import React from 'react';
 import { JCIAccreditedBadge } from '../ui/JCIAccreditedBadge';
+import { SafeCareLevelIndicator } from '../ui/SafeCareLevelIndicator';
 
 interface FacilityHeaderProps {
     facility: any;
@@ -9,6 +10,12 @@ interface FacilityHeaderProps {
 }
 
 export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scrollToTab }) => {
+    // Get SafeCare level display text
+    const getSafeCareLevelDisplay = (level: number) => {
+        if (level === 0) return 'Not Certified Yet';
+        return `Level ${level}`;
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -58,7 +65,7 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
 
                 {/* Right side: Quality & Rating cards - stacked on all screens */}
                 <div className="flex shrink-0 flex-col gap-3 sm:gap-4 md:w-72">
-                    {/* SafeCare Certification Card - Removed quality standards text */}
+                    {/* SafeCare Certification Card */}
                     <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-5">
                         <div className="mb-2 flex items-center gap-2 sm:mb-3">
                             <Award size={18} className="text-afya-deep" />
@@ -66,17 +73,15 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
                         </div>
                         <div className="mb-2 w-full sm:mb-4">
                             <div className="origin-left scale-90 sm:scale-100">
-                                {/* Keep the SafeCare level indicator without the "Quality Standards" label */}
                                 <div className="flex items-center gap-3">
-                                    <span className="text-sm font-semibold text-gray-700">Level {facility.safeCareLevel}</span>
-                                    <span className="text-xs text-gray-500">
-                                        {facility.safeCareLevel === 5
-                                            ? '⭐ Excellence'
-                                            : facility.safeCareLevel >= 4
-                                              ? 'Advanced'
-                                              : facility.safeCareLevel >= 3
-                                                ? 'Intermediate'
-                                                : 'Foundation'}
+                                    {/* Show SafeCare Level Indicator if level > 0 */}
+                                    {facility.safeCareLevel > 0 ? (
+                                        <SafeCareLevelIndicator level={facility.safeCareLevel} size="sm" showLabel={false} />
+                                    ) : (
+                                        <div className="h-3 w-16 rounded-full bg-gray-200"></div>
+                                    )}
+                                    <span className={`text-sm font-semibold ${facility.safeCareLevel === 0 ? 'text-gray-400' : 'text-gray-700'}`}>
+                                        {getSafeCareLevelDisplay(facility.safeCareLevel)}
                                     </span>
                                 </div>
                             </div>
@@ -88,7 +93,7 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
                         )}
                     </div>
 
-                    {/* Patient Rating Card - Enhanced with better visual */}
+                    {/* Patient Rating Card */}
                     <div
                         className="hover:border-afya-mid flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:shadow-md sm:p-4"
                         onClick={() => scrollToTab('reviews')}
@@ -99,7 +104,7 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
                             </div>
                             <div>
                                 <div className="text-lg font-bold text-gray-800 sm:text-2xl">{(facility.rating ?? 0).toFixed(1)}</div>
-                                <div className="text-[10px] text-gray-500 sm:text-sm">{facility.reviewCount ?? 0} patient reviews</div>
+                                <div className="text-[10px] text-gray-500 sm:text-sm">{facility.reviewCount ?? 0} Patient Reviews</div>
                             </div>
                         </div>
                         <div className="text-afya-deep bg-afya-light rounded-full px-3 py-1 text-xs font-medium">View all</div>

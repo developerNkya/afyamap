@@ -1,11 +1,10 @@
 // components/ui/FacilityCard.tsx
 import React, { useState } from 'react';
-import { MapPin, ArrowRight, Navigation, Shield } from 'lucide-react';
+import { MapPin, ArrowRight, Navigation, Award, Star } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { SafeCareLevelIndicator } from './SafeCareLevelIndicator';
 import { JCIAccreditedBadge } from './JCIAccreditedBadge';
-import { StarRating } from './StarRating';
 
 interface FacilityCardProps {
   facility: any;
@@ -41,6 +40,12 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
   const insurances = Array.isArray(facility.insurances) ? facility.insurances : [];
   const hasInsurances = insurances.length > 0;
 
+  // Get SafeCare level display text
+  const getSafeCareLevelDisplay = (level: number) => {
+    if (level === 0) return 'Not Certified Yet';
+    return `Level ${level}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -68,11 +73,10 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
             }}
           />
         ) : (
-          /* Simple fallback background without icon */
           <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200"></div>
         )}
 
-        {/* Badges - Only these overlays remain */}
+        {/* Badges */}
         <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1.5 sm:gap-2">
           {facility.jciAccredited && (
             <div className="bg-white/90 backdrop-blur-sm rounded-full p-0.5 shadow-sm">
@@ -80,6 +84,16 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
             </div>
           )}
         </div>
+
+        {/* SafeCare Level Badge on Image - Only show if level >= 1 */}
+        {facility.safeCareLevel >= 1 && (
+          <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 bg-white/90 backdrop-blur-sm px-2 sm:px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
+            <Award size={12} className="sm:w-3.5 sm:h-3.5 text-afya-deep" />
+            <span className="text-[10px] sm:text-xs font-medium text-gray-700">
+              Level {facility.safeCareLevel}
+            </span>
+          </div>
+        )}
 
         {/* Distance Chip */}
         {facility.distance && (
@@ -110,36 +124,81 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
           </div>
         </div>
 
-        {/* Quality & Rating Row */}
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-3 sm:mb-4 py-2 sm:py-3 border-y border-gray-100">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <SafeCareLevelIndicator
-              level={facility.safeCareLevel}
-              size="sm"
-              showLabel={false}
-            />
-            <span className="text-xs sm:text-sm font-medium text-gray-700">
-              Level {facility.safeCareLevel}
-            </span>
+        {/* Quality & Rating Row - With Labels and Aligned Bars */}
+        <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-3 sm:mb-4 py-2 sm:py-3 border-y border-gray-100">
+          {/* SafeCare Certification */}
+          <div className="flex items-center gap-3">
+            {/* Only show indicator if level > 0, otherwise show greyed out or nothing */}
+            {facility.safeCareLevel > 0 ? (
+              <SafeCareLevelIndicator
+                level={facility.safeCareLevel}
+                size="sm"
+                showLabel={false}
+              />
+            ) : (
+              <div className="w-12 sm:w-16 h-3 bg-gray-200 rounded-full"></div>
+            )}
+            <div className="flex flex-col">
+              <span className="text-[8px] sm:text-[9px] font-semibold text-gray-400 uppercase tracking-wider">
+                SafeCare Certification
+              </span>
+              <span className={`text-xs sm:text-sm font-bold ${
+                facility.safeCareLevel === 0 ? 'text-gray-400' : 'text-gray-700'
+              }`}>
+                {getSafeCareLevelDisplay(facility.safeCareLevel)}
+              </span>
+            </div>
           </div>
-          <div className="hidden sm:block w-px h-6 sm:h-8 bg-gray-200" />
+          
+          <div className="hidden sm:block w-px h-10 bg-gray-200" />
           <div className="flex sm:hidden w-full h-px bg-gray-200" />
-          <div>
-            <StarRating
-              rating={facility.rating}
-              reviewCount={facility.reviewCount}
-              size="sm"
-            />
+          
+          {/* Patient Rating */}
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col">
+              <span className="text-[8px] sm:text-[9px] font-semibold text-gray-400 uppercase tracking-wider">
+                Patient Rating
+              </span>
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
+                  <Star size={14} className="sm:w-4 sm:h-4 fill-afya-deep text-afya-deep" />
+                  <span className="text-sm sm:text-base font-bold text-gray-800">
+                    {(facility.rating || 0).toFixed(1)}
+                  </span>
+                </div>
+                <span className="text-[10px] sm:text-xs text-gray-500">
+                  ({facility.reviewCount || 0} reviews)
+                </span>
+              </div>
+            </div>
           </div>
+
+          {/* JCI Badge - show inline if present */}
+          {facility.jciAccredited && (
+            <>
+              <div className="hidden sm:block w-px h-10 bg-gray-200" />
+              <div className="flex sm:hidden w-full h-px bg-gray-200" />
+              <div className="flex flex-col">
+                <span className="text-[8px] sm:text-[9px] font-semibold text-gray-400 uppercase tracking-wider">
+                  Accreditation
+                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] sm:text-xs font-bold text-blue-600 bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded">
+                    JCI
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-gray-500">Accredited</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Services - Updated to show full names without truncation and no icon */}
+        {/* Services */}
         <div className="mb-4 sm:mb-5 flex-grow">
           <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Services</span>
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {hasServices ? (
               <>
-                {/* Show services in full without truncation - no icon */}
                 {visibleServices.map((service: string, idx: number) => (
                   <span
                     key={idx}
@@ -149,7 +208,6 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
                   </span>
                 ))}
                 
-                {/* Show remaining count button if more than 3 services */}
                 {!showAllServices && hasMoreServices && (
                   <button
                     type="button"
@@ -169,7 +227,6 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
             )}
           </div>
           
-          {/* Show less button when expanded */}
           {showAllServices && hasMoreServices && (
             <button
               type="button"

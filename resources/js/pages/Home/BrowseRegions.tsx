@@ -122,7 +122,7 @@ export const BrowseRegions: React.FC<BrowseRegionsProps> = ({ regions }) => {
                                 <MapPin size={28} className="text-afya-deep" />
                                 Explore by <span className="text-afya-deep">Region</span>
                             </h2>
-                            <p className="text-xs text-gray-600 sm:text-sm md:text-base">Find quality healthcare facilities across Tanzania</p>
+                            <p className="text-xs text-gray-600 sm:text-sm md:text-base">Find healthcare facilities across Tanzania</p>
                         </div>
 
                         {/* Desktop View All Button */}

@@ -115,11 +115,11 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
                     >
                         <div className="w-full sm:w-auto">
                             <h2 className="text-afya-text mb-1 flex flex-wrap items-center gap-2 text-xl font-bold sm:mb-2 sm:text-2xl md:text-3xl">
-                                Hospital <span className="text-afya-deep">Categories</span>
+                                Health Facility <span className="text-afya-deep">Categories</span>
                             </h2>
-                            <p className="text-xs text-gray-600 sm:text-sm md:text-base">
+                            {/* <p className="text-xs text-gray-600 sm:text-sm md:text-base">
                                 {filteredCategories.length} healthcare categories available
-                            </p>
+                            </p> */}
                         </div>
 
                         {/* Desktop View All Button */}
