@@ -115,7 +115,7 @@ export const FacilityServices: React.FC<FacilityServicesProps> = ({
 
             {isGrouped && categoryNames.length > 0 ? (
                 <>
-                    {/* Grid of categories */}
+                    {/* Grid of categories - using items-start to prevent stretching */}
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         {currentCategories.map((category) => {
                             const catServices = groupedServices[category] ?? [];
