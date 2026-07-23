@@ -1,4 +1,5 @@
-import React from 'react';
+// components/ui/FacilityCard.tsx
+import React, { useState } from 'react';
 import { MapPin, ArrowRight, Navigation, Shield } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -20,7 +21,26 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
   index = 0
 }) => {
   const isHorizontal = layout === 'horizontal';
+  const [showAllServices, setShowAllServices] = useState(false);
   
+  // Get services array - handle both array and object formats
+  const services = Array.isArray(facility.services) 
+    ? facility.services 
+    : facility.services 
+      ? Object.values(facility.services).flat() 
+      : [];
+  
+  const hasServices = services.length > 0;
+  
+  // Display first 3 services
+  const visibleServices = showAllServices ? services : services.slice(0, 3);
+  const remainingCount = services.length - 3;
+  const hasMoreServices = services.length > 3;
+
+  // Get insurances
+  const insurances = Array.isArray(facility.insurances) ? facility.insurances : [];
+  const hasInsurances = insurances.length > 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -113,24 +133,56 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
           </div>
         </div>
 
-        {/* Services */}
+        {/* Services - Updated to show full names without truncation and no icon */}
         <div className="mb-4 sm:mb-5 flex-grow">
           <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Services</span>
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
-            {(Array.isArray(facility.services) ? facility.services : []).slice(0, 3).map((service: string, idx: number) => (
-              <span
-                key={idx}
-                className="text-[10px] sm:text-xs bg-gray-50 border border-gray-100 text-gray-600 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-medium truncate max-w-[80px] sm:max-w-none"
-              >
-                {service.length > 12 ? service.substring(0, 10) + '...' : service}
-              </span>
-            ))}
-            {Array.isArray(facility.services) && facility.services.length > 3 && (
-              <span className="text-[10px] sm:text-xs bg-gray-50 border border-gray-100 text-gray-500 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-medium">
-                +{facility.services.length - 3}
-              </span>
+            {hasServices ? (
+              <>
+                {/* Show services in full without truncation - no icon */}
+                {visibleServices.map((service: string, idx: number) => (
+                  <span
+                    key={idx}
+                    className="text-[10px] sm:text-xs bg-afya-light/50 text-afya-deep px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md border border-afya-light/30 font-medium"
+                  >
+                    {service}
+                  </span>
+                ))}
+                
+                {/* Show remaining count button if more than 3 services */}
+                {!showAllServices && hasMoreServices && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowAllServices(true);
+                    }}
+                    className="text-[10px] sm:text-xs bg-gray-50 border border-gray-200 text-gray-600 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    +{remainingCount} more
+                  </button>
+                )}
+              </>
+            ) : (
+              <span className="text-[10px] sm:text-xs text-gray-400 italic">No services listed</span>
             )}
           </div>
+          
+          {/* Show less button when expanded */}
+          {showAllServices && hasMoreServices && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowAllServices(false);
+              }}
+              className="mt-1.5 text-[10px] sm:text-xs text-afya-deep hover:underline font-medium"
+            >
+              Show less
+            </button>
+          )}
         </div>
 
         {/* Footer Row */}
@@ -141,8 +193,8 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
               Accepts
             </span>
             <span className="text-gray-600 font-medium truncate">
-              {Array.isArray(facility.insurances) && facility.insurances.length > 0
-                ? facility.insurances.slice(0, 3).join(', ') + (facility.insurances.length > 3 ? '...' : '')
+              {hasInsurances
+                ? insurances.slice(0, 2).join(', ') + (insurances.length > 2 ? ` +${insurances.length - 2}` : '')
                 : 'Various'}
             </span>
           </div>
