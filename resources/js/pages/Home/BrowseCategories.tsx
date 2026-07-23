@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, ChevronLeft, ChevronRight, Search, Stethoscope } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { CategoryCard } from '../../components/ui/CategoryCard';
 
@@ -115,8 +115,7 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
                     >
                         <div className="w-full sm:w-auto">
                             <h2 className="text-afya-text mb-1 flex flex-wrap items-center gap-2 text-xl font-bold sm:mb-2 sm:text-2xl md:text-3xl">
-                                <Stethoscope size={28} className="text-afya-deep" />
-                                Browse by <span className="text-afya-deep">Category</span>
+                                Hospital <span className="text-afya-deep">Categories</span>
                             </h2>
                             <p className="text-xs text-gray-600 sm:text-sm md:text-base">
                                 {filteredCategories.length} healthcare categories available
@@ -140,7 +139,7 @@ export const BrowseCategories: React.FC<BrowseCategoriesProps> = ({ categories }
                         <Search size={16} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search categories..."
+                            placeholder="Browse by category..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="focus:ring-afya-deep/20 focus:border-afya-deep w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-9 text-sm transition-all focus:ring-2 focus:outline-none"

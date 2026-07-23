@@ -178,13 +178,23 @@ class PageController extends Controller
             abort(404, 'Facility not found');
         }
 
-        // ── Services ─────────────────────────────────────────────────────────
-        $services = DB::table('tbl_facility_services as fs')
+        // ── Services Grouped by Category ─────────────────────────────────────
+        $servicesData = DB::table('tbl_facility_services as fs')
             ->join('tbl_services as s', 's.service_id', '=', 'fs.service_id')
+            ->join('tbl_service_categories as sc', 'sc.category_id', '=', 's.category_id')
             ->where('fs.facility_id', $id)
-            ->pluck('s.name')
-            ->values()
-            ->all();
+            ->where('fs.status', 1)
+            ->where('s.status', 1)
+            ->where('sc.status', 1)
+            ->select(['sc.name as category_name', 's.name as service_name'])
+            ->orderBy('sc.name')
+            ->orderBy('s.name')
+            ->get();
+
+        $services = [];
+        foreach ($servicesData as $sd) {
+            $services[$sd->category_name][] = $sd->service_name;
+        }
 
         // ── Insurances ────────────────────────────────────────────────────────
         $insurances = DB::table('tbl_facility_insurances as fi')

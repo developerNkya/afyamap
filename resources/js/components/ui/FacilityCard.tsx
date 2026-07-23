@@ -115,6 +115,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
 
         {/* Services */}
         <div className="mb-4 sm:mb-5 flex-grow">
+          <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Services</span>
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {(Array.isArray(facility.services) ? facility.services : []).slice(0, 3).map((service: string, idx: number) => (
               <span
@@ -141,7 +142,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
             </span>
             <span className="text-gray-600 font-medium truncate">
               {Array.isArray(facility.insurances) && facility.insurances.length > 0
-                ? facility.insurances.slice(0, 2).join(', ') + (facility.insurances.length > 2 ? ` +${facility.insurances.length - 2}` : '')
+                ? facility.insurances.slice(0, 3).join(', ') + (facility.insurances.length > 3 ? '...' : '')
                 : 'Various'}
             </span>
           </div>

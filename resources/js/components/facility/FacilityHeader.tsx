@@ -1,103 +1,111 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Navigation, Share2, Clock, Star } from 'lucide-react';
-import { SafeCareLevelIndicator } from '../ui/SafeCareLevelIndicator';
+import { Award, Clock, MapPin, Navigation, Phone, Share2, Star } from 'lucide-react';
+import React from 'react';
 import { JCIAccreditedBadge } from '../ui/JCIAccreditedBadge';
 
 interface FacilityHeaderProps {
-  facility: any;
-  scrollToTab: (tabId: string) => void;
+    facility: any;
+    scrollToTab: (tabId: string) => void;
 }
 
 export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scrollToTab }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8"
-    >
-      <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-5 md:gap-8">
-        {/* Left side: Info & actions */}
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="bg-afya-light text-afya-deep px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider">
-              {facility.category}
-            </span>
-            <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded-md">
-              <Clock size={12} /> Open Now
-            </span>
-          </div>
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mx-auto mb-6 max-w-7xl px-4 sm:mb-8 sm:px-6 lg:px-8"
+        >
+            <div className="flex flex-col justify-between gap-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 md:flex-row md:gap-8 md:p-8">
+                {/* Left side: Info & actions */}
+                <div className="flex-1">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="bg-afya-light text-afya-deep rounded-full px-3 py-1 text-[11px] font-bold tracking-wider uppercase sm:text-xs">
+                            {facility.category}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-[11px] font-medium text-green-700 sm:text-xs">
+                            <Clock size={12} /> Open Now
+                        </span>
+                    </div>
 
-          <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 leading-tight">
-            {facility.name}
-          </h1>
+                    <h1 className="mb-2 text-xl leading-tight font-bold text-gray-800 sm:text-3xl md:text-4xl">{facility.name}</h1>
 
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-gray-600 text-sm mb-4">
-            <span className="flex items-center gap-1.5">
-              <MapPin size={16} className="shrink-0" />
-              <span className="text-sm">{facility.address}</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Phone size={16} className="shrink-0" />
-              <span className="text-sm">{facility.phone}</span>
-            </span>
-          </div>
+                    <div className="mb-4 flex flex-col gap-2 text-sm text-gray-600 sm:flex-row sm:flex-wrap sm:gap-4">
+                        <span className="flex items-center gap-1.5">
+                            <MapPin size={16} className="shrink-0" />
+                            <span className="text-sm">{facility.address}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <Phone size={16} className="shrink-0" />
+                            <span className="text-sm">{facility.phone}</span>
+                        </span>
+                    </div>
 
-          <div className="flex flex-wrap gap-2 sm:gap-3">
-            <button className="bg-afya-deep text-white px-4 py-2 rounded-xl font-medium hover:bg-opacity-90 transition-colors flex items-center gap-2 text-xs sm:text-sm">
-              <Navigation size={16} />
-              <span>Directions</span>
-            </button>
-            <button className="bg-white text-afya-deep border border-afya-deep px-4 py-2 rounded-xl font-medium hover:bg-afya-light transition-colors flex items-center gap-2 text-xs sm:text-sm">
-              <Phone size={16} />
-              <span>Call</span>
-            </button>
-            <button className="bg-gray-100 text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition-colors">
-              <Share2 size={16} />
-            </button>
-          </div>
-        </div>
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                        <button className="bg-afya-deep hover:bg-opacity-90 flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium text-white transition-colors sm:text-sm">
+                            <Navigation size={16} />
+                            <span>Directions</span>
+                        </button>
+                        <button className="text-afya-deep border-afya-deep hover:bg-afya-light flex items-center gap-2 rounded-xl border bg-white px-4 py-2 text-xs font-medium transition-colors sm:text-sm">
+                            <Phone size={16} />
+                            <span>Call</span>
+                        </button>
+                        <button className="rounded-xl bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200">
+                            <Share2 size={16} />
+                        </button>
+                    </div>
+                </div>
 
-        {/* Right side: Quality & Rating cards - stacked on all screens (flex-col) */}
-        <div className="md:w-72 shrink-0 flex flex-col gap-3 sm:gap-4">
-          {/* Quality Standards Card */}
-          <div className="bg-gray-50 rounded-xl p-3 sm:p-5 border border-gray-200">
-            <h3 className="text-[10px] sm:text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 sm:mb-3">
-              Quality Standards
-            </h3>
-            <div className="mb-2 sm:mb-4 w-full">
-              {/* Responsive indicator: smaller on mobile, normal on desktop */}
-              <div className="sm:scale-100 scale-90 origin-left">
-                <SafeCareLevelIndicator level={facility.safeCareLevel} size="sm" />
-              </div>
+                {/* Right side: Quality & Rating cards - stacked on all screens */}
+                <div className="flex shrink-0 flex-col gap-3 sm:gap-4 md:w-72">
+                    {/* SafeCare Certification Card - Removed quality standards text */}
+                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-5">
+                        <div className="mb-2 flex items-center gap-2 sm:mb-3">
+                            <Award size={18} className="text-afya-deep" />
+                            <h3 className="text-[10px] font-bold tracking-wider text-gray-500 uppercase sm:text-sm">SafeCare Certification</h3>
+                        </div>
+                        <div className="mb-2 w-full sm:mb-4">
+                            <div className="origin-left scale-90 sm:scale-100">
+                                {/* Keep the SafeCare level indicator without the "Quality Standards" label */}
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm font-semibold text-gray-700">Level {facility.safeCareLevel}</span>
+                                    <span className="text-xs text-gray-500">
+                                        {facility.safeCareLevel === 5
+                                            ? '⭐ Excellence'
+                                            : facility.safeCareLevel >= 4
+                                              ? 'Advanced'
+                                              : facility.safeCareLevel >= 3
+                                                ? 'Intermediate'
+                                                : 'Foundation'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {facility.jciAccredited && (
+                            <div className="mt-2 border-t border-gray-200 pt-2 sm:mt-3 sm:pt-3">
+                                <JCIAccreditedBadge size="sm" />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Patient Rating Card - Enhanced with better visual */}
+                    <div
+                        className="hover:border-afya-mid flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:shadow-md sm:p-4"
+                        onClick={() => scrollToTab('reviews')}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-afya-deep rounded-lg p-2 text-white">
+                                <Star size={20} className="fill-white" />
+                            </div>
+                            <div>
+                                <div className="text-lg font-bold text-gray-800 sm:text-2xl">{(facility.rating ?? 0).toFixed(1)}</div>
+                                <div className="text-[10px] text-gray-500 sm:text-sm">{facility.reviewCount ?? 0} patient reviews</div>
+                            </div>
+                        </div>
+                        <div className="text-afya-deep bg-afya-light rounded-full px-3 py-1 text-xs font-medium">View all</div>
+                    </div>
+                </div>
             </div>
-            {facility.jciAccredited && (
-              <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200">
-                <JCIAccreditedBadge size="sm" />
-              </div>
-            )}
-          </div>
-
-          {/* Rating Card - below quality card */}
-          <div
-            className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200 flex items-center justify-between cursor-pointer hover:border-afya-mid transition-colors"
-            onClick={() => scrollToTab('reviews')}
-          >
-            <div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-800">
-                {(facility.rating ?? 0).toFixed(1)}
-              </div>
-              <div className="text-[10px] sm:text-sm text-gray-500">
-                {facility.reviewCount ?? 0} reviews
-              </div>
-            </div>
-            <div className="bg-afya-deep text-white p-1.5 sm:p-2 rounded-lg">
-              <Star size={18} className="sm:w-6 sm:h-6 fill-white" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
+        </motion.div>
+    );
 };

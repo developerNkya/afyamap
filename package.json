@@ -5,6 +5,8 @@
         "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
+        "watch": "vite build --watch",
+        "watch-poll": "vite build --watch --poll=1000",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix"

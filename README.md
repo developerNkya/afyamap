@@ -23,3 +23,10 @@ In order to ensure that the Laravel community is welcoming to all, please review
 ## License
 
 The Laravel + React starter kit is open-sourced software licensed under the MIT license.
+
+
+
+
+HOW TO RUN:
+npm run watch
+php artisan serve
