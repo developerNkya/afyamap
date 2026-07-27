@@ -36,13 +36,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
     // Combined quality options with levels and JCI
     const qualityOptions = [
-        { value: '', label: 'All Quality' },
+        { value: '', label: 'Quality Standards' },
         { value: 'level-1', label: 'Level 1 - Basic' },
         { value: 'level-2', label: 'Level 2 - Standard' },
         { value: 'level-3', label: 'Level 3 - Good' },
         { value: 'level-4', label: 'Level 4 - Excellent' },
         { value: 'level-5', label: 'Level 5 - Outstanding' },
-        { value: 'jci', label: 'JCI Accredited Only' },
+        { value: 'jci', label: 'JCI Accredited' },
     ];
 
     // Get current selected quality value
