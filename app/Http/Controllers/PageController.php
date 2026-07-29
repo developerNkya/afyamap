@@ -15,6 +15,27 @@ use Inertia\Inertia;
 
 class PageController extends Controller
 {
+    /**
+     * Get the image base URL with proper environment handling
+     * 
+     * This method determines where to load images from based on the environment.
+     * For production, it uses IMAGE_BASE_URL from .env
+     * For local development, it falls back to APP_URL
+     */
+    private function getImageBaseUrl(): string
+    {
+        // Get the image base URL from config
+        $imageBaseUrl = config('app.image_base_url');
+
+        // If not set or null, fallback to APP_URL
+        if (empty($imageBaseUrl) || $imageBaseUrl === 'null' || $imageBaseUrl === '') {
+            $imageBaseUrl = config('app.url');
+        }
+
+        // Remove trailing slash if exists
+        return rtrim($imageBaseUrl, '/');
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // HOME
     // ─────────────────────────────────────────────────────────────────────────
@@ -34,14 +55,14 @@ class PageController extends Controller
         $regions    = $this->getRegions();
         $categories = $this->getCategories();
         $services   = $this->getServices();
-        $insurances = $this->getInsurances(); // ✅ ADD THIS LINE
+        $insurances = $this->getInsurances();
 
         return Inertia::render('Home', [
             'facilities' => $facilities,
             'regions'    => $regions,
             'categories' => $categories,
             'services'   => $services,
-            'insurances' => $insurances, // ✅ ADD THIS LINE
+            'insurances' => $insurances,
         ]);
     }
 
@@ -212,18 +233,19 @@ class PageController extends Controller
             ->all();
 
         // ── Gallery images ────────────────────────────────────────────────────
+        $imageBaseUrl = $this->getImageBaseUrl();
         $gallery = DB::table('tbl_facility_images')
             ->where('facility_id', $id)
             ->where('status', 1)
             ->orderBy('sort_order')
             ->pluck('image_path')
-            ->map(fn($p) => asset('uploads/facilities/gallery/' . $p))
+            ->map(fn($p) => $imageBaseUrl . '/uploads/facilities/gallery/' . $p)
             ->values()
             ->all();
 
         // If no gallery images, use logo as fallback
         if (empty($gallery) && $row->logo) {
-            $gallery = [asset('uploads/facilities/' . $row->logo)];
+            $gallery = [$imageBaseUrl . '/uploads/facilities/' . $row->logo];
         }
 
         // ── Dynamic Comments & Ratings ───────────────────────────────────────
@@ -412,7 +434,8 @@ class PageController extends Controller
     {
         $logo = null;
         if (!empty($row->logo)) {
-            $logo = '/uploads/facilities/' . $row->logo;
+            $imageBaseUrl = $this->getImageBaseUrl();
+            $logo = $imageBaseUrl . '/uploads/facilities/' . $row->logo;
         }
 
         // Build a human-readable hours string

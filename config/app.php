@@ -123,4 +123,21 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Image Base URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used to generate image URLs for facilities, galleries, and
+    | other uploaded images. This allows you to serve images from a separate
+    | server or CDN while keeping the main application on a different server.
+    |
+    | Example: https://demo.afyamap.tz
+    |
+    | For local development, this will fallback to APP_URL.
+    |
+    */
+
+    'image_base_url' => env('IMAGE_BASE_URL', env('APP_URL')),
+
 ];
