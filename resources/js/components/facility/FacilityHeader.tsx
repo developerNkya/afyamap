@@ -12,7 +12,7 @@ interface FacilityHeaderProps {
 export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scrollToTab }) => {
     // Get SafeCare level display text
     const getSafeCareLevelDisplay = (level: number) => {
-        if (level === 0) return 'Not Certified Yet';
+        if (level === 0) return 'Not Certified';
         return `Level ${level}`;
     };
 

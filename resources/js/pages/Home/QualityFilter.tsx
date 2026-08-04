@@ -36,11 +36,11 @@ export const QualityFilter: React.FC<QualityFilterProps> = ({
     // Combined quality options with levels and JCI
     const qualityOptions = [
         { value: '', label: 'Quality Standards', icon: <Shield size={14} /> },
-        { value: 'level-1', label: 'Level 1 - Basic', icon: <Star size={12} /> },
-        { value: 'level-2', label: 'Level 2 - Standard', icon: <Star size={12} /> },
-        { value: 'level-3', label: 'Level 3 - Good', icon: <Star size={12} /> },
-        { value: 'level-4', label: 'Level 4 - Excellent', icon: <Star size={12} /> },
-        { value: 'level-5', label: 'Level 5 - Outstanding', icon: <Award size={12} /> },
+        { value: 'level-1', label: 'Safe Care Level 1 - Basic', icon: <Star size={12} /> },
+        { value: 'level-2', label: 'Safe Care Level 2 - Standard', icon: <Star size={12} /> },
+        { value: 'level-3', label: 'Safe Care Level 3 - Good', icon: <Star size={12} /> },
+        { value: 'level-4', label: 'Safe Care Level 4 - Excellent', icon: <Star size={12} /> },
+        { value: 'level-5', label: 'Safe Care Level 5 - Outstanding', icon: <Award size={12} /> },
         { value: 'jci', label: 'JCI Accredited', icon: <BadgeCheck size={14} /> },
     ];
 

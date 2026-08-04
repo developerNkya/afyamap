@@ -42,7 +42,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
 
   // Get SafeCare level display text
   const getSafeCareLevelDisplay = (level: number) => {
-    if (level === 0) return 'Not Certified Yet';
+    if (level === 0) return 'Not Certified';
     return `Level ${level}`;
   };
 

@@ -11,7 +11,7 @@ interface FacilitySafetyProps {
 export const FacilitySafety: React.FC<FacilitySafetyProps> = ({ facility }) => {
     // Get SafeCare level display text
     const getSafeCareLevelDisplay = (level: number) => {
-        if (level === 0) return 'Not Certified Yet';
+        if (level === 0) return 'Not Certified';
         return `Level ${level}`;
     };
 
@@ -51,7 +51,7 @@ export const FacilitySafety: React.FC<FacilitySafetyProps> = ({ facility }) => {
                 >
                     <div>
                         <h3 className="mb-1 text-xl font-bold">
-                            {facility.safeCareLevel === 0 ? 'Not Certified Yet' : `SafeCare Level ${facility.safeCareLevel}`}
+                            {facility.safeCareLevel === 0 ? 'Not Certified' : `SafeCare Level ${facility.safeCareLevel}`}
                         </h3>
                         <p className={`${facility.safeCareLevel === 0 ? 'text-gray-300' : 'text-blue-100'} text-sm`}>
                             {facility.safeCareLevel === 0 ? 'Certification in progress' : 'Internationally recognized quality standard'}

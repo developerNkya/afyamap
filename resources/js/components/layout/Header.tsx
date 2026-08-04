@@ -17,8 +17,8 @@ export const Header: React.FC = () => {
     return (
         <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                {/* Increased height from h-20 to h-24 and added py-2 for more vertical padding */}
-                <div className="flex h-24 items-center justify-between py-2">
+                {/* Increased height and padding for better spacing */}
+                <div className="flex h-28 items-center justify-between py-3">
                     {/* Logo with navigate image below - aligned left */}
                     <Link href="/" className="flex flex-shrink-0 flex-col items-start">
                         <img
@@ -46,14 +46,14 @@ export const Header: React.FC = () => {
                         </div>
                     </Link>
 
-                    {/* Desktop Nav */}
-                    <nav className="hidden items-center gap-8 md:flex">
+                    {/* Desktop Nav - with increased gap and padding */}
+                    <nav className="hidden items-center md:flex">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.name}
                                 href={link.path}
-                                className={`hover:text-afya-deep text-sm font-medium transition-colors ${
-                                    url === link.path ? 'text-afya-deep border-afya-accent border-b-2 py-1' : 'text-gray-600'
+                                className={`hover:text-afya-deep px-6 py-2 text-sm font-medium transition-colors ${
+                                    url === link.path ? 'border-afya-accent text-afya-deep border-b-2' : 'text-gray-600'
                                 }`}
                             >
                                 {link.name}
@@ -65,7 +65,7 @@ export const Header: React.FC = () => {
                     <div className="hidden items-center gap-4 md:flex">
                         <Link
                             href="/download"
-                            className="bg-afya-deep hover:bg-opacity-90 flex items-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors"
+                            className="bg-afya-deep hover:bg-opacity-90 flex items-center rounded-lg px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors"
                         >
                             Get the App
                         </Link>
@@ -86,7 +86,7 @@ export const Header: React.FC = () => {
                             <Link
                                 key={link.name}
                                 href={link.path}
-                                className={`rounded-lg p-2 text-base font-medium ${
+                                className={`rounded-lg p-3 text-base font-medium ${
                                     url === link.path ? 'bg-afya-light text-afya-deep' : 'text-gray-600'
                                 }`}
                                 onClick={() => setIsMobileMenuOpen(false)}
@@ -97,7 +97,7 @@ export const Header: React.FC = () => {
                         <div className="mt-2 border-t border-gray-100 pt-4">
                             <Link
                                 href="/download"
-                                className="bg-afya-deep hover:bg-opacity-90 flex w-full items-center justify-center rounded-lg px-4 py-3 text-base font-medium text-white transition-colors"
+                                className="bg-afya-deep hover:bg-opacity-90 flex w-full items-center justify-center rounded-lg px-4 py-3.5 text-base font-medium text-white transition-colors"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 Get the App

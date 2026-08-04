@@ -22,7 +22,7 @@ export const FeaturedFacilities: React.FC<FeaturedFacilitiesProps> = ({ faciliti
                     className="mb-6 flex flex-col items-start justify-between gap-3 sm:mb-8 sm:flex-row sm:items-end sm:gap-4"
                 >
                     <div className="w-full sm:w-auto">
-                        <h2 className="text-afya-text mb-1 text-xl font-bold sm:mb-2 sm:text-2xl md:text-3xl">Top-Rated Safe Facilities</h2>
+                        <h2 className="text-afya-text mb-1 text-xl font-bold sm:mb-2 sm:text-2xl md:text-3xl">Top-Rated Safe Care Facilities</h2>
                         <p className="text-xs text-gray-600 sm:text-sm md:text-base">Facilities with best quality standards and patient reviews</p>
                     </div>
 

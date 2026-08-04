@@ -53,7 +53,7 @@ class PageController extends Controller
 
         // Filter option lists for the hero search bar
         $regions    = $this->getRegions();
-        $categories = $this->getCategories();
+        $categories = $this->getCategories(); // Now filters out Faith-based/NGO
         $services   = $this->getServices();
         $insurances = $this->getInsurances();
 
@@ -167,7 +167,7 @@ class PageController extends Controller
 
         // ── Filter option lists ───────────────────────────────────────────────
         $regions    = $this->getRegions();
-        $categories = $this->getCategories();
+        $categories = $this->getCategories(); // Now filters out Faith-based/NGO
         $services   = $this->getServices();
         $insurances = $this->getInsurances();
 
@@ -542,8 +542,23 @@ class PageController extends Controller
             ->all();
     }
 
+    /**
+     * Get categories filtered to exclude "Faith-based / NGO (non-profit)"
+     * 
+     * This method filters out the Faith-based/NGO category from both the
+     * home page and facilities list page.
+     */
     private function getCategories(): array
     {
+        // Define the category names to exclude
+        $excludedCategories = [
+            'Faith-based / NGO (non-profit)',
+            'Faith-based / NGO (non-profit)',
+            'Faith-based',
+            'NGO',
+            'Faith-based / NGO'
+        ];
+
         $counts = DB::table('tbl_facilities')
             ->where('status', 1)
             ->whereNotNull('category_id')
@@ -551,7 +566,9 @@ class PageController extends Controller
             ->groupBy('category_id')
             ->pluck('cnt', 'category_id');
 
-        return FacilityCategory::orderBy('name')
+        return FacilityCategory::where('status', 1)
+            ->whereNotIn('name', $excludedCategories) // Exclude the Faith-based/NGO category
+            ->orderBy('name')
             ->get(['category_id', 'name'])
             ->map(fn($c) => [
                 'id'    => $c->category_id,

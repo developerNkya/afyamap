@@ -28,5 +28,6 @@ The Laravel + React starter kit is open-sourced software licensed under the MIT 
 
 
 HOW TO RUN:
+- start xampp
 npm run watch
 php artisan serve
