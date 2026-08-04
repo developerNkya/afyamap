@@ -12,7 +12,7 @@ interface SearchBarProps {
     selectedLevels: number[];
     setSelectedLevels: (levels: number[]) => void;
     regions: any[];
-    servicesList: string[];
+    servicesList: string[] | Record<string, string[]>; // Now supports both array and grouped
     // Add JCI props
     jciOnly?: boolean;
     setJciOnly?: (jci: boolean) => void;
@@ -44,6 +44,31 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         { value: 'level-5', label: 'Safe Care Level 5 - Outstanding' },
         { value: 'jci', label: 'JCI Accredited' },
     ];
+
+    // ── Helper: Extract flat list of services from grouped data ──
+    const getFlatServicesList = (): string[] => {
+        if (!servicesList) return [];
+
+        // If it's already an array, return it
+        if (Array.isArray(servicesList)) {
+            return servicesList;
+        }
+
+        // If it's a grouped object, extract all service names
+        if (typeof servicesList === 'object') {
+            const flatList: string[] = [];
+            Object.values(servicesList).forEach((services: any) => {
+                if (Array.isArray(services)) {
+                    flatList.push(...services);
+                }
+            });
+            return flatList;
+        }
+
+        return [];
+    };
+
+    const flatServices = getFlatServicesList();
 
     // Get current selected quality value
     const getQualityValue = () => {
@@ -77,6 +102,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        // Trigger search with current query
+        setSearchQuery(searchQuery);
     };
 
     return (
@@ -124,7 +151,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                         </div>
                     </div>
 
-                    {/* Service Select */}
+                    {/* Service Select - Now handles both flat and grouped */}
                     <div className="group relative flex-1 md:max-w-[200px]">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                             <Activity className="group-focus-within:text-afya-deep h-5 w-5 text-gray-400 transition-colors" />
@@ -135,7 +162,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                             onChange={(e) => setSelectedServices(e.target.value ? [e.target.value] : [])}
                         >
                             <option value="">Any Service</option>
-                            {servicesList.map((s) => (
+                            {flatServices.map((s) => (
                                 <option key={s} value={s}>
                                     {s}
                                 </option>
@@ -167,7 +194,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                         </div>
                     </div>
 
-                    {/* Search Button - Matching Hero Section Style */}
+                    {/* Search Button */}
                     <button
                         type="submit"
                         onMouseEnter={() => setIsSearchHovered(true)}

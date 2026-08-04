@@ -1,9 +1,9 @@
-// pages/FacilitiesList.tsx - Updated with new FacilitiesFilter
+// pages/FacilitiesList.tsx
 import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FacilitiesFilter } from '../components/facilities/FacilitiesFilter'; // New import
+import { FacilitiesFilter } from '../components/facilities/FacilitiesFilter';
 import { FilterChips } from '../components/facilities/FilterChips';
 import { FilterSidebar } from '../components/facilities/FilterSidebar';
 import { MobileFilterDrawer } from '../components/facilities/MobileFilterDrawer';
@@ -17,7 +17,8 @@ interface FacilitiesListProps {
     facilities: any[];
     regions: any[];
     categories: any[];
-    services: any[];
+    services: any[] | Record<string, string[]>; // Can be flat array or grouped object
+    servicesFlat?: any[]; // Flat list for search bar
     insurances: any[];
     filters?: Record<string, string>;
 }
@@ -27,6 +28,7 @@ export default function FacilitiesList({
     regions = [],
     categories = [],
     services = [],
+    servicesFlat = [],
     insurances = [],
     filters = {},
 }: FacilitiesListProps) {
@@ -99,8 +101,38 @@ export default function FacilitiesList({
         [searchQuery, selectedRegions, selectedCategories, selectedServices, selectedInsurances, selectedLevel, jciOnly],
     );
 
-    // Build flat service/insurance name lists
-    const servicesList = services.map((s: any) => s.name);
+    // ── Helper to extract flat service list from grouped data ──
+    const getFlatServicesList = (): string[] => {
+        if (!services) return [];
+
+        // If services is already an array, use it
+        if (Array.isArray(services)) {
+            return services.map((s: any) => s.name || s);
+        }
+
+        // If services is a grouped object, extract all service names
+        if (typeof services === 'object') {
+            const flatList: string[] = [];
+            Object.values(services).forEach((serviceArray: any) => {
+                if (Array.isArray(serviceArray)) {
+                    flatList.push(...serviceArray);
+                }
+            });
+            return flatList;
+        }
+
+        return [];
+    };
+
+    // ── Get flat services for search bar ──
+    // Use servicesFlat if provided, otherwise extract from grouped services
+    const flatServicesForSearchBar = servicesFlat.length > 0 ? servicesFlat.map((s: any) => s.name || s) : getFlatServicesList();
+
+    // ── Get services for sidebar (grouped if available) ──
+    // If services is already grouped, use it. Otherwise, use the flat list.
+    const servicesForSidebar = !Array.isArray(services) && typeof services === 'object' ? services : { 'All Services': flatServicesForSearchBar };
+
+    // Build insurance name list
     const insurancesList = insurances.map((i: any) => i.name);
 
     // Ensure facilities is an array
@@ -188,13 +220,6 @@ export default function FacilitiesList({
         }, 100);
     };
 
-    // Handle quality filter changes from SearchBar
-    const handleQualityChange = (level: string, jci: boolean) => {
-        setSelectedLevel(level);
-        setJciOnly(jci);
-        applyServerFilters({ level, jci });
-    };
-
     const filterProps = {
         selectedLevels: selectedLevel ? [parseInt(selectedLevel)] : [],
         setSelectedLevels: (levels: number[]) => {
@@ -235,7 +260,7 @@ export default function FacilitiesList({
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                {/* Search Bar - includes quality filter */}
+                {/* Search Bar - uses flat services for dropdown */}
                 <SearchBar
                     searchQuery={searchQuery}
                     setSearchQuery={handleSearch}
@@ -256,7 +281,7 @@ export default function FacilitiesList({
                         applyServerFilters({ level: newLevel });
                     }}
                     regions={regions}
-                    servicesList={servicesList}
+                    servicesList={flatServicesForSearchBar}
                     jciOnly={jciOnly}
                     setJciOnly={(jci: boolean) => {
                         setJciOnly(jci);
@@ -309,20 +334,20 @@ export default function FacilitiesList({
                 </div>
 
                 <div className="mt-4 flex flex-col gap-8 md:flex-row">
-                    {/* Desktop Sidebar */}
+                    {/* Desktop Sidebar - uses grouped services */}
                     <div className="hidden w-72 shrink-0 md:block">
                         <div className="sticky top-24">
                             <FilterSidebar
                                 {...filterProps}
                                 categories={categories}
                                 regions={regions}
-                                servicesList={servicesList}
+                                servicesList={servicesForSidebar}
                                 insurancesList={insurancesList}
                             />
                         </div>
                     </div>
 
-                    {/* Mobile Filters Drawer */}
+                    {/* Mobile Filters Drawer - uses grouped services */}
                     <MobileFilterDrawer
                         isOpen={isMobileFiltersOpen}
                         onClose={() => setIsMobileFiltersOpen(false)}
@@ -330,7 +355,7 @@ export default function FacilitiesList({
                         {...filterProps}
                         categories={categories}
                         regions={regions}
-                        servicesList={servicesList}
+                        servicesList={servicesForSidebar}
                         insurancesList={insurancesList}
                     />
 

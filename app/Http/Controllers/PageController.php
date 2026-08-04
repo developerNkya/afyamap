@@ -54,7 +54,7 @@ class PageController extends Controller
         // Filter option lists for the hero search bar
         $regions    = $this->getRegions();
         $categories = $this->getCategories(); // Now filters out Faith-based/NGO
-        $services   = $this->getServices();
+        $services   = $this->getServices(); // Flat list for home page
         $insurances = $this->getInsurances();
 
         return Inertia::render('Home', [
@@ -168,7 +168,12 @@ class PageController extends Controller
         // ── Filter option lists ───────────────────────────────────────────────
         $regions    = $this->getRegions();
         $categories = $this->getCategories(); // Now filters out Faith-based/NGO
-        $services   = $this->getServices();
+
+        // For facilities list, we need grouped services for the sidebar
+        // AND flat services for the search bar dropdown
+        $servicesGrouped = $this->getGroupedServices(); // Grouped for sidebar
+        $servicesFlat = $this->getServices(); // Flat for search bar
+
         $insurances = $this->getInsurances();
 
         // Districts for the selected region (for cascading dropdown)
@@ -185,7 +190,8 @@ class PageController extends Controller
             'facilities' => $facilities,
             'regions'    => $regions,
             'categories' => $categories,
-            'services'   => $services,
+            'services'   => $servicesGrouped, // Grouped for sidebar
+            'servicesFlat' => $servicesFlat, // Flat for search bar
             'insurances' => $insurances,
             'districts'  => $districts,
             'filters'    => $request->only(['q', 'region', 'district', 'category', 'service', 'insurance', 'level', 'jci']),
@@ -481,20 +487,35 @@ class PageController extends Controller
 
     /**
      * Map raw facility records and load services and insurances for each.
+     * Now loads services grouped by category for each facility.
      */
     private function mapFacilitiesWithRelations($rawFacilities)
     {
         $facilityIds = $rawFacilities->pluck('facility_id')->all();
 
+        // Load services grouped by category for each facility
         $servicesByFacility = [];
         if (!empty($facilityIds)) {
             $serviceRows = DB::table('tbl_facility_services as fs')
                 ->join('tbl_services as s', 's.service_id', '=', 'fs.service_id')
+                ->leftJoin('tbl_service_categories as sc', 'sc.category_id', '=', 's.category_id')
                 ->whereIn('fs.facility_id', $facilityIds)
-                ->select('fs.facility_id', 's.name')
+                ->where('fs.status', 1)
+                ->where('s.status', 1)
+                ->select(
+                    'fs.facility_id',
+                    's.name as service_name',
+                    DB::raw('COALESCE(sc.name, "Other Services") as category_name')
+                )
+                ->orderBy('sc.name')
+                ->orderBy('s.name')
                 ->get();
+
             foreach ($serviceRows as $srv) {
-                $servicesByFacility[$srv->facility_id][] = $srv->name;
+                if (!isset($servicesByFacility[$srv->facility_id])) {
+                    $servicesByFacility[$srv->facility_id] = [];
+                }
+                $servicesByFacility[$srv->facility_id][$srv->category_name][] = $srv->service_name;
             }
         }
 
@@ -581,9 +602,41 @@ class PageController extends Controller
             ->all();
     }
 
+    /**
+     * Get services grouped by category for filter sidebar.
+     * This matches the format used in facility detail.
+     * Used in FacilitiesList page for the sidebar.
+     */
+    private function getGroupedServices(): array
+    {
+        $servicesData = DB::table('tbl_services as s')
+            ->join('tbl_service_categories as sc', 'sc.category_id', '=', 's.category_id')
+            ->where('s.status', 1)
+            ->where('sc.status', 1)
+            ->select(['sc.name as category_name', 's.name as service_name'])
+            ->orderBy('sc.name')
+            ->orderBy('s.name')
+            ->get();
+
+        $services = [];
+        foreach ($servicesData as $sd) {
+            if (!isset($services[$sd->category_name])) {
+                $services[$sd->category_name] = [];
+            }
+            $services[$sd->category_name][] = $sd->service_name;
+        }
+
+        return $services;
+    }
+
+    /**
+     * Get flat list of services for search bar dropdowns.
+     * Used in Home page and FacilitiesList search bar.
+     */
     private function getServices(): array
     {
-        return Service::orderBy('name')
+        return Service::where('status', 1)
+            ->orderBy('name')
             ->get(['service_id', 'name'])
             ->map(fn($s) => [
                 'id'   => $s->service_id,
@@ -593,9 +646,13 @@ class PageController extends Controller
             ->all();
     }
 
+    /**
+     * Get flat list of insurance providers.
+     */
     private function getInsurances(): array
     {
-        return Insurance::orderBy('name')
+        return Insurance::where('status', 1)
+            ->orderBy('name')
             ->get(['insurance_id', 'name'])
             ->map(fn($i) => [
                 'id'   => $i->insurance_id,
