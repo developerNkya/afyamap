@@ -17,9 +17,8 @@ export const Header: React.FC = () => {
     return (
         <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                {/* Increased height and padding for better spacing */}
-                <div className="flex h-28 items-center justify-between py-3">
-                    {/* Logo with navigate image below - aligned left */}
+                <div className="flex items-center justify-between py-3">
+                    {/* Logo - Left */}
                     <Link href="/" className="flex flex-shrink-0 flex-col items-start">
                         <img
                             src="/images/logo/logo8.png"
@@ -30,7 +29,6 @@ export const Header: React.FC = () => {
                                 minWidth: '140px',
                             }}
                         />
-                        {/* Navigate image below logo - aligned to the same left edge */}
                         <div className="mt-0.5 flex items-center">
                             <img
                                 src="/images/logo/navigate.png"
@@ -46,26 +44,25 @@ export const Header: React.FC = () => {
                         </div>
                     </Link>
 
-                    {/* Desktop Nav - with increased gap and padding */}
-                    <nav className="hidden items-center md:flex">
+                    {/* Spacer - pushes everything to the right */}
+                    <div className="flex-1"></div>
+
+                    {/* Desktop Navigation & Button Group - Right aligned with even spacing */}
+                    <div className="hidden items-center gap-10 md:flex lg:gap-14 xl:gap-20 2xl:gap-24">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.name}
                                 href={link.path}
-                                className={`hover:text-afya-deep px-6 py-2 text-sm font-medium transition-colors ${
-                                    url === link.path ? 'border-afya-accent text-afya-deep border-b-2' : 'text-gray-600'
+                                className={`hover:text-afya-deep text-sm font-medium whitespace-nowrap transition-colors md:text-base ${
+                                    url === link.path ? 'border-afya-accent text-afya-deep border-b-2 pb-1' : 'text-gray-600'
                                 }`}
                             >
                                 {link.name}
                             </Link>
                         ))}
-                    </nav>
-
-                    {/* Desktop Actions */}
-                    <div className="hidden items-center gap-4 md:flex">
                         <Link
                             href="/download"
-                            className="bg-afya-deep hover:bg-opacity-90 flex items-center rounded-lg px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors"
+                            className="bg-afya-deep hover:bg-opacity-90 flex items-center rounded-lg px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors lg:px-7 lg:py-3"
                         >
                             Get the App
                         </Link>

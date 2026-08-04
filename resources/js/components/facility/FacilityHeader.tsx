@@ -16,6 +16,43 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
         return `Level ${level}`;
     };
 
+    // Function to open Google Maps - same as sidebar
+    const openInMaps = () => {
+        if (facility.lat && facility.lng) {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${facility.lat},${facility.lng}`, '_blank');
+        } else if (facility.address) {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility.address)}`, '_blank');
+        }
+    };
+
+    // Function to open phone dialer
+    const openPhone = () => {
+        if (facility.phone) {
+            window.open(`tel:${facility.phone}`, '_blank');
+        }
+    };
+
+    // Function to share
+    const shareFacility = () => {
+        if (navigator.share) {
+            navigator
+                .share({
+                    title: facility.name,
+                    text: `Check out ${facility.name} on AfyaMap`,
+                    url: window.location.href,
+                })
+                .catch(() => {});
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard
+                .writeText(window.location.href)
+                .then(() => {
+                    alert('Link copied to clipboard!');
+                })
+                .catch(() => {});
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -49,15 +86,21 @@ export const FacilityHeader: React.FC<FacilityHeaderProps> = ({ facility, scroll
                     </div>
 
                     <div className="flex flex-wrap gap-2 sm:gap-3">
-                        <button className="bg-afya-deep hover:bg-opacity-90 flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium text-white transition-colors sm:text-sm">
+                        <button
+                            onClick={openInMaps}
+                            className="bg-afya-deep hover:bg-opacity-90 flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium text-white transition-colors sm:text-sm"
+                        >
                             <Navigation size={16} />
                             <span>Directions</span>
                         </button>
-                        <button className="text-afya-deep border-afya-deep hover:bg-afya-light flex items-center gap-2 rounded-xl border bg-white px-4 py-2 text-xs font-medium transition-colors sm:text-sm">
+                        <button
+                            onClick={openPhone}
+                            className="text-afya-deep border-afya-deep hover:bg-afya-light flex items-center gap-2 rounded-xl border bg-white px-4 py-2 text-xs font-medium transition-colors sm:text-sm"
+                        >
                             <Phone size={16} />
                             <span>Call</span>
                         </button>
-                        <button className="rounded-xl bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200">
+                        <button onClick={shareFacility} className="rounded-xl bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200">
                             <Share2 size={16} />
                         </button>
                     </div>

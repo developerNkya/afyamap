@@ -1,8 +1,9 @@
-// pages/FacilitiesList.tsx - Server-side filtering via Inertia router
+// pages/FacilitiesList.tsx - Updated with new FacilitiesFilter
 import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { FacilitiesFilter } from '../components/facilities/FacilitiesFilter'; // New import
 import { FilterChips } from '../components/facilities/FilterChips';
 import { FilterSidebar } from '../components/facilities/FilterSidebar';
 import { MobileFilterDrawer } from '../components/facilities/MobileFilterDrawer';
@@ -11,7 +12,6 @@ import { SearchBar } from '../components/facilities/SearchBar';
 import { Layout } from '../components/layout/Layout';
 import { FacilityCard } from '../components/ui/FacilityCard';
 import { Pagination } from '../components/ui/Pagintation';
-import { QualityFilter } from '../pages/Home/QualityFilter'; // Import QualityFilter
 
 interface FacilitiesListProps {
     facilities: any[];
@@ -32,12 +32,12 @@ export default function FacilitiesList({
 }: FacilitiesListProps) {
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
-    // Pagination State (client-side only — server returns all matches)
+    // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [sortBy, setSortBy] = useState('relevant');
 
-    // ── Filter state — synced to server via Inertia router ──────────────────
+    // ── Filter state ──
     const [searchQuery, setSearchQuery] = useState(filters.q ?? '');
     const [selectedLevel, setSelectedLevel] = useState(filters.level ?? '');
     const [jciOnly, setJciOnly] = useState(filters.jci === '1' ?? false);
@@ -64,7 +64,7 @@ export default function FacilitiesList({
         setCurrentPage(1);
     }, [facilities]);
 
-    // ── Push filters to server via Inertia ───────────────────────────────────
+    // ── Push filters to server via Inertia ──
     const applyServerFilters = useCallback(
         (overrides: Record<string, any> = {}) => {
             const params: Record<string, string> = {};
@@ -106,12 +106,11 @@ export default function FacilitiesList({
     // Ensure facilities is an array
     const safeFacilities = Array.isArray(facilities) ? facilities : [];
 
-    // Toggle helper — updates local state and fires server request
+    // Toggle helper
     const toggleArrayItem = (array: any[], setArray: React.Dispatch<React.SetStateAction<any[]>>, item: any) => {
         const next = array.includes(item) ? array.filter((i) => i !== item) : [...array, item];
         setArray(next);
 
-        // Determine which filter this is and push to server
         if (setArray === setSelectedRegions) {
             applyServerFilters({ regions: next });
         } else if (setArray === setSelectedCategories) {
@@ -123,7 +122,7 @@ export default function FacilitiesList({
         }
     };
 
-    // Clear ALL filters — navigate to clean /facilities
+    // Clear ALL filters
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedLevel('');
@@ -143,10 +142,9 @@ export default function FacilitiesList({
         applyServerFilters({ q });
     };
 
-    // ── Client-side: sort + JCI + level (fast, no round-trip) ────────────────
+    // ── Client-side: sort + JCI + level ──
     let filteredFacilities = [...safeFacilities];
 
-    // Apply level filter
     if (selectedLevel) {
         const levelNum = parseInt(selectedLevel);
         filteredFacilities = filteredFacilities.filter((f) => f.safeCareLevel >= levelNum);
@@ -165,7 +163,7 @@ export default function FacilitiesList({
         filteredFacilities.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     }
 
-    // ── Pagination ─────────────────────────────────────────────────────────────
+    // ── Pagination ──
     const totalPages = Math.ceil(filteredFacilities.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedFacilities = filteredFacilities.slice(startIndex, startIndex + itemsPerPage);
@@ -190,7 +188,7 @@ export default function FacilitiesList({
         }, 100);
     };
 
-    // Handle quality filter changes
+    // Handle quality filter changes from SearchBar
     const handleQualityChange = (level: string, jci: boolean) => {
         setSelectedLevel(level);
         setJciOnly(jci);
@@ -237,7 +235,7 @@ export default function FacilitiesList({
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                {/* Search Bar */}
+                {/* Search Bar - includes quality filter */}
                 <SearchBar
                     searchQuery={searchQuery}
                     setSearchQuery={handleSearch}
@@ -259,16 +257,16 @@ export default function FacilitiesList({
                     }}
                     regions={regions}
                     servicesList={servicesList}
+                    jciOnly={jciOnly}
+                    setJciOnly={(jci: boolean) => {
+                        setJciOnly(jci);
+                        applyServerFilters({ jci });
+                    }}
                 />
 
-                {/* Quality Filter - Same as Home page */}
+                {/* Facilities Filter - Only Insurance and Category (no quality) */}
                 <div className="mt-4">
-                    <QualityFilter
-                        selectedLevel={selectedLevel}
-                        setSelectedLevel={(level: string) => {
-                            setSelectedLevel(level);
-                            applyServerFilters({ level });
-                        }}
+                    <FacilitiesFilter
                         showAdvanced={showAdvanced}
                         setShowAdvanced={setShowAdvanced}
                         categories={categories}
@@ -276,7 +274,6 @@ export default function FacilitiesList({
                         selectedInsurance={selectedInsurance}
                         setSelectedInsurance={(insurance: string) => {
                             setSelectedInsurance(insurance);
-                            // If insurance is selected, add to filters
                             if (insurance) {
                                 setSelectedInsurances([insurance]);
                                 applyServerFilters({ insurances: [insurance] });
@@ -296,11 +293,7 @@ export default function FacilitiesList({
                                 applyServerFilters({ categories: [] });
                             }
                         }}
-                        jciOnly={jciOnly}
-                        setJciOnly={(jci: boolean) => {
-                            setJciOnly(jci);
-                            applyServerFilters({ jci });
-                        }}
+                        activeFilterCount={activeFilterCount}
                     />
                 </div>
 
