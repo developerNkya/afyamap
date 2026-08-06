@@ -53,21 +53,34 @@ REDIS_HOST=127.0.0.1
 REDIS_PASSWORD=null
 REDIS_PORT=6379
 
-MAIL_MAILER=log
-MAIL_HOST=127.0.0.1
-MAIL_PORT=2525
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_ENCRYPTION=null
-MAIL_FROM_ADDRESS="hello@example.com"
-MAIL_FROM_NAME="${APP_NAME}"
+#===========================================
+# 📧 MAIL CONFIGURATION - PRODUCTION
+#===========================================
+# Using secure SSL/TLS settings for production
+MAIL_MAILER=smtp
+MAIL_HOST=mail.afyamap.tz
+MAIL_PORT=465
+MAIL_USERNAME=info@afyamap.tz
+MAIL_PASSWORD=6l+}FA5jKv&V
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS=info@afyamap.tz
+MAIL_FROM_NAME="AfyaMap"
 
+#===========================================
+# AWS (If using S3 for storage)
+#===========================================
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_DEFAULT_REGION=us-east-1
 AWS_BUCKET=
 AWS_USE_PATH_STYLE_ENDPOINT=false
 
+#===========================================
+# VITE
+#===========================================
 VITE_APP_NAME="${APP_NAME}"
 
+#===========================================
+# IMAGE BASE URL
+#===========================================
 IMAGE_BASE_URL=https://demo.afyamap.tz

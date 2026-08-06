@@ -11,7 +11,10 @@ Route::get('/facilities',   [PageController::class, 'facilitiesList'])->name('fa
 Route::get('/facility/{id}',[PageController::class, 'facilityDetail'])->name('facility.detail');
 Route::post('/facility/{id}/review', [PageController::class, 'storeReview'])->name('facility.review')->middleware('auth');
 Route::get('/about',        [PageController::class, 'about'])->name('about');
+Route::get('/privacy',      [PageController::class, 'privacy'])->name('privacy');
+Route::get('/terms',        [PageController::class, 'terms'])->name('terms');
 Route::get('/contact',      [PageController::class, 'contact'])->name('contact');
+Route::post('/contact',     [PageController::class, 'sendContact'])->name('contact.send');
 
 // ─── Admin Auth ─────────────────────────────────────────────────────────────────
 Route::get('/admin/login',  [FacilityController::class, 'adminLogin'])->name('admin.login');

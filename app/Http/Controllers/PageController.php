@@ -11,6 +11,7 @@ use App\Models\Insurance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class PageController extends Controller
@@ -380,16 +381,113 @@ class PageController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // ABOUT / CONTACT
+    // ABOUT
     // ─────────────────────────────────────────────────────────────────────────
     public function about()
     {
         return Inertia::render('About');
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // CONTACT - Page & Form Submission
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Display the contact page
+     */
     public function contact()
     {
         return Inertia::render('Contact');
+    }
+
+    /**
+     * Send contact form email
+     */
+/**
+ * Send contact form email
+ */
+public function sendContact(Request $request)
+{
+    // Validate the request
+    $validated = $request->validate([
+        'name'         => 'required|string|max:255',
+        'email'        => 'required|email|max:255',
+        'inquiry_type' => 'required|string|max:255',
+        'message'      => 'required|string|max:5000',
+    ]);
+
+    try {
+        $name = $validated['name'];
+        $email = $validated['email'];
+        $type = $validated['inquiry_type'];
+        $message = $validated['message'];
+
+        $emailBody = "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; color: #333; }
+                h2 { color: #0065B3; border-bottom: 2px solid #0065B3; padding-bottom: 10px; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                td { padding: 10px; border: 1px solid #ddd; }
+                td.label { font-weight: bold; background: #f5f5f5; width: 150px; }
+                .message-box { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 10px; }
+            </style>
+        </head>
+        <body>
+            <h2>📩 New Contact Form Message</h2>
+            <p><strong>Submitted on:</strong> " . date('Y-m-d H:i:s') . "</p>
+
+            <table>
+                <tr><td class='label'>Name</td><td>$name</td></tr>
+                <tr><td class='label'>Email</td><td>$email</td></tr>
+                <tr><td class='label'>Inquiry Type</td><td>$type</td></tr>
+            </table>
+
+            <h3>📝 Message:</h3>
+            <div class='message-box'>" . nl2br($message) . "</div>
+
+            <hr>
+            <p style='color: #999; font-size: 12px;'>This message was sent from the AfyaMap Contact form.</p>
+        </body>
+        </html>c
+        ";
+
+        Mail::send([], [], function ($message) use ($emailBody, $validated) {
+            $message->to('info@afyamap.tz')
+                ->from('info@afyamap.tz', 'AfyaMap')
+                ->replyTo($validated['email'], $validated['name'])
+                ->subject('New Contact Form Message - AfyaMap')
+                ->html($emailBody);
+        });
+
+        return redirect()->back()->with('success', 'Thank you! Your message has been sent successfully.');
+
+    } catch (\Exception $e) {
+        \Log::error('Contact form error: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Failed to send message. Please try again or contact us directly.');
+    }
+}
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PRIVACY & TERMS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Privacy Policy page
+     */
+    public function privacy()
+    {
+        return Inertia::render('Privacy');
+    }
+
+    /**
+     * Terms & Conditions page
+     */
+    public function terms()
+    {
+        return Inertia::render('Terms');
     }
 
     // =========================================================================
@@ -565,13 +663,9 @@ class PageController extends Controller
 
     /**
      * Get categories filtered to exclude "Faith-based / NGO (non-profit)"
-     * 
-     * This method filters out the Faith-based/NGO category from both the
-     * home page and facilities list page.
      */
     private function getCategories(): array
     {
-        // Define the category names to exclude
         $excludedCategories = [
             'Faith-based / NGO (non-profit)',
             'Faith-based / NGO (non-profit)',
@@ -588,7 +682,7 @@ class PageController extends Controller
             ->pluck('cnt', 'category_id');
 
         return FacilityCategory::where('status', 1)
-            ->whereNotIn('name', $excludedCategories) // Exclude the Faith-based/NGO category
+            ->whereNotIn('name', $excludedCategories)
             ->orderBy('name')
             ->get(['category_id', 'name'])
             ->map(fn($c) => [
@@ -604,8 +698,6 @@ class PageController extends Controller
 
     /**
      * Get services grouped by category for filter sidebar.
-     * This matches the format used in facility detail.
-     * Used in FacilitiesList page for the sidebar.
      */
     private function getGroupedServices(): array
     {
@@ -631,7 +723,6 @@ class PageController extends Controller
 
     /**
      * Get flat list of services for search bar dropdowns.
-     * Used in Home page and FacilitiesList search bar.
      */
     private function getServices(): array
     {
