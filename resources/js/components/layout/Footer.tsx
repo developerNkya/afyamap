@@ -1,13 +1,12 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import {
-  MapPin,
-  Heart,
   Facebook,
   Twitter,
   Instagram,
   Mail,
   Phone,
+  MapPin,
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -15,16 +14,20 @@ export const Footer: React.FC = () => {
     <footer className="bg-afya-text text-white pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Brand Col */}
+          {/* Brand Col - With white background for logo visibility */}
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="relative flex items-center justify-center w-8 h-8 bg-white rounded-lg text-afya-text">
-                <MapPin size={20} className="absolute" />
-                <Heart size={10} className="absolute mt-[-2px] fill-afya-text" />
+              <div className="bg-white p-2 rounded-lg inline-block">
+                <img
+                  src="/images/logo/logo6.png"
+                  alt="AfyaMap"
+                  className="h-12 w-auto object-contain"
+                  style={{
+                    maxWidth: '160px',
+                    minWidth: '120px',
+                  }}
+                />
               </div>
-              <span className="text-2xl font-bold tracking-tight">
-                Afya<span className="text-afya-mid">Map</span>
-              </span>
             </Link>
             <p className="text-gray-300 text-sm mb-6 leading-relaxed">
               Welcome to safer, smarter healthcare. AfyaMap helps you navigate
@@ -177,7 +180,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Footer - Updated with Privacy & Terms */}
+        {/* Bottom Footer */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-400 text-sm">
             &copy; {new Date().getFullYear()} AfyaMap. All rights reserved.
