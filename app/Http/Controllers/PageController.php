@@ -45,6 +45,7 @@ class PageController extends Controller
         // Featured: top-rated active facilities (safecare_level >= 4)
         $rawFacilities = $this->buildFacilityQuery()
             ->where('f.status', 1)
+            ->whereNull('f.deleted_at')
             ->where('f.safecare_level', '>=', 4)
             ->orderBy('f.average_rating', 'desc')
             ->limit(8)
@@ -72,7 +73,9 @@ class PageController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     public function facilitiesList(Request $request)
     {
-        $query = $this->buildFacilityQuery()->where('f.status', 1);
+        $query = $this->buildFacilityQuery()
+            ->where('f.status', 1)
+            ->whereNull('f.deleted_at');
 
         // ── Text search ──────────────────────────────────────────────────────
         if ($request->filled('q')) {
@@ -204,9 +207,10 @@ class PageController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     public function facilityDetail($id)
     {
-        // Core facility row with joins
+        // Core facility row with joins - include deleted_at check
         $row = $this->buildFacilityQuery()
             ->where('f.facility_id', $id)
+            ->whereNull('f.deleted_at')
             ->first();
 
         if (!$row) {
@@ -238,6 +242,24 @@ class PageController extends Controller
             ->pluck('i.name')
             ->values()
             ->all();
+
+        // ── Payment Methods ──────────────────────────────────────────────────
+        $paymentMethods = DB::table('tbl_facility_payment_methods as fpm')
+            ->join('tbl_payment_methods as pm', 'pm.payment_method_id', '=', 'fpm.payment_method_id')
+            ->where('fpm.facility_id', $id)
+            ->where('fpm.status', 1)
+            ->where('pm.status', 1)
+            ->orderBy('pm.sort_order', 'asc')
+            ->select([
+                'pm.payment_method_id as id',
+                'pm.name',
+                'pm.short_code',
+                'pm.type',
+                'pm.icon',
+                'pm.description'
+            ])
+            ->get()
+            ->toArray();
 
         // ── Gallery images ────────────────────────────────────────────────────
         $imageBaseUrl = $this->getImageBaseUrl();
@@ -315,16 +337,17 @@ class PageController extends Controller
         $mappedFacility['reviewCount'] = $facilityReviewCount;
 
         $facility = array_merge($mappedFacility, [
-            'services'   => $services,
-            'insurances' => $insurances,
-            'gallery'    => $gallery,
-            'description' => null,
-            'open_time'   => $row->open_time   ?? null,
-            'close_time'  => $row->close_time  ?? null,
-            'opening_days' => $row->opening_days ?? null,
-            'beds'        => null,
-            'established' => null,
-            'languages'   => [],
+            'services'        => $services,
+            'insurances'      => $insurances,
+            'payment_methods' => $paymentMethods,
+            'gallery'         => $gallery,
+            'description'     => null,
+            'open_time'       => $row->open_time   ?? null,
+            'close_time'      => $row->close_time  ?? null,
+            'opening_days'    => $row->opening_days ?? null,
+            'beds'            => null,
+            'established'     => null,
+            'languages'       => [],
         ]);
 
         return Inertia::render('FacilityDetail', [
@@ -403,72 +426,69 @@ class PageController extends Controller
     /**
      * Send contact form email
      */
-/**
- * Send contact form email
- */
-public function sendContact(Request $request)
-{
-    // Validate the request
-    $validated = $request->validate([
-        'name'         => 'required|string|max:255',
-        'email'        => 'required|email|max:255',
-        'inquiry_type' => 'required|string|max:255',
-        'message'      => 'required|string|max:5000',
-    ]);
+    public function sendContact(Request $request)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'name'         => 'required|string|max:255',
+            'email'        => 'required|email|max:255',
+            'inquiry_type' => 'required|string|max:255',
+            'message'      => 'required|string|max:5000',
+        ]);
 
-    try {
-        $name = $validated['name'];
-        $email = $validated['email'];
-        $type = $validated['inquiry_type'];
-        $message = $validated['message'];
+        try {
+            $name = $validated['name'];
+            $email = $validated['email'];
+            $type = $validated['inquiry_type'];
+            $message = $validated['message'];
 
-        $emailBody = "
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; color: #333; }
-                h2 { color: #0065B3; border-bottom: 2px solid #0065B3; padding-bottom: 10px; }
-                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                td { padding: 10px; border: 1px solid #ddd; }
-                td.label { font-weight: bold; background: #f5f5f5; width: 150px; }
-                .message-box { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 10px; }
-            </style>
-        </head>
-        <body>
-            <h2>📩 New Contact Form Message</h2>
-            <p><strong>Submitted on:</strong> " . date('Y-m-d H:i:s') . "</p>
+            $emailBody = "
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; color: #333; }
+                    h2 { color: #0065B3; border-bottom: 2px solid #0065B3; padding-bottom: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    td { padding: 10px; border: 1px solid #ddd; }
+                    td.label { font-weight: bold; background: #f5f5f5; width: 150px; }
+                    .message-box { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 10px; }
+                </style>
+            </head>
+            <body>
+                <h2>📩 New Contact Form Message</h2>
+                <p><strong>Submitted on:</strong> " . date('Y-m-d H:i:s') . "</p>
 
-            <table>
-                <tr><td class='label'>Name</td><td>$name</td></tr>
-                <tr><td class='label'>Email</td><td>$email</td></tr>
-                <tr><td class='label'>Inquiry Type</td><td>$type</td></tr>
-            </table>
+                <table>
+                    <tr><td class='label'>Name</td><td>$name</td></tr>
+                    <tr><td class='label'>Email</td><td>$email</td></tr>
+                    <tr><td class='label'>Inquiry Type</td><td>$type</td></tr>
+                </table>
 
-            <h3>📝 Message:</h3>
-            <div class='message-box'>" . nl2br($message) . "</div>
+                <h3>📝 Message:</h3>
+                <div class='message-box'>" . nl2br($message) . "</div>
 
-            <hr>
-            <p style='color: #999; font-size: 12px;'>This message was sent from the AfyaMap Contact form.</p>
-        </body>
-        </html>c
-        ";
+                <hr>
+                <p style='color: #999; font-size: 12px;'>This message was sent from the AfyaMap Contact form.</p>
+            </body>
+            </html>
+            ";
 
-        Mail::send([], [], function ($message) use ($emailBody, $validated) {
-            $message->to('info@afyamap.tz')
-                ->from('info@afyamap.tz', 'AfyaMap')
-                ->replyTo($validated['email'], $validated['name'])
-                ->subject('New Contact Form Message - AfyaMap')
-                ->html($emailBody);
-        });
+            Mail::send([], [], function ($message) use ($emailBody, $validated) {
+                $message->to('info@afyamap.tz')
+                    ->from('info@afyamap.tz', 'AfyaMap')
+                    ->replyTo($validated['email'], $validated['name'])
+                    ->subject('New Contact Form Message - AfyaMap')
+                    ->html($emailBody);
+            });
 
-        return redirect()->back()->with('success', 'Thank you! Your message has been sent successfully.');
+            return redirect()->back()->with('success', 'Thank you! Your message has been sent successfully.');
 
-    } catch (\Exception $e) {
-        \Log::error('Contact form error: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Failed to send message. Please try again or contact us directly.');
+        } catch (\Exception $e) {
+            \Log::error('Contact form error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to send message. Please try again or contact us directly.');
+        }
     }
-}
 
     // ─────────────────────────────────────────────────────────────────────────
     // PRIVACY & TERMS
@@ -637,11 +657,14 @@ public function sendContact(Request $request)
         })->values()->all();
     }
 
-    /** Filter option helpers */
+    /**
+     * Get regions with facility counts.
+     */
     private function getRegions(): array
     {
         $counts = DB::table('tbl_facilities')
             ->where('status', 1)
+            ->whereNull('deleted_at')
             ->whereNotNull('region_id')
             ->select('region_id', DB::raw('COUNT(*) as cnt'))
             ->groupBy('region_id')
@@ -676,6 +699,7 @@ public function sendContact(Request $request)
 
         $counts = DB::table('tbl_facilities')
             ->where('status', 1)
+            ->whereNull('deleted_at')
             ->whereNotNull('category_id')
             ->select('category_id', DB::raw('COUNT(*) as cnt'))
             ->groupBy('category_id')
