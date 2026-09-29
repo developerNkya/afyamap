@@ -69,7 +69,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="mx-auto mb-8 max-w-3xl text-center sm:mb-10">
-                    <motion.div
+                    {/* <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
@@ -77,7 +77,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     >
                         <Sparkles className="h-3 w-3 text-blue-300 sm:h-3.5 sm:w-3.5" />
                         <span className="text-xs font-medium sm:text-sm">Trusted by 50,000+ patients</span>
-                    </motion.div>
+                    </motion.div> */}
 
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}

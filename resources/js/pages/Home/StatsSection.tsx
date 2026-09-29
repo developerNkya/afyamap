@@ -3,18 +3,45 @@ import { motion } from 'framer-motion';
 import { Building2, Globe, Heart } from 'lucide-react';
 import { AnimatedCounter } from './AnimatedCounter';
 
-export const StatsSection = () => {
-  const stats = [
-    { value: 450, label: "Verified Facilities", suffix: "+", icon: <Building2 className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-blue-200" /> },
-    { value: 26, label: "Regions Covered", suffix: "", icon: <Globe className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-blue-200" /> },
-    { value: 15, label: "Patient Reviews", suffix: "k+", icon: <Heart className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-blue-200" /> }
+interface StatsSectionProps {
+  stats?: {
+    facilities: number;
+    regions: number;
+    reviews: number;
+  };
+}
+
+export const StatsSection: React.FC<StatsSectionProps> = ({ stats }) => {
+  const facilitiesCount = stats?.facilities ?? 0;
+  const regionsCount = stats?.regions ?? 0;
+  const reviewsCount = stats?.reviews ?? 0;
+
+  const statItems = [
+    { 
+      value: facilitiesCount, 
+      label: "Verified Facilities", 
+      suffix: facilitiesCount > 0 ? "+" : "", 
+      icon: <Building2 className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-blue-200" /> 
+    },
+    { 
+      value: regionsCount, 
+      label: "Regions Covered", 
+      suffix: "", 
+      icon: <Globe className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-blue-200" /> 
+    },
+    { 
+      value: reviewsCount, 
+      label: "Patient Reviews", 
+      suffix: reviewsCount > 0 ? "+" : "", 
+      icon: <Heart className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-blue-200" /> 
+    }
   ];
 
   return (
     <section className="bg-afya-deep text-white py-10 sm:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
-          {stats.map((stat, idx) => (
+          {statItems.map((stat, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, scale: 0.8 }}

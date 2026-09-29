@@ -60,11 +60,55 @@ class PageController extends Controller
         $insurances = $this->getInsurances();
 
         return Inertia::render('Home', [
-            'facilities' => $facilities,
-            'regions'    => $regions,
-            'categories' => $categories,
-            'services'   => $services,
-            'insurances' => $insurances,
+            'facilities'   => $facilities,
+            'regions'      => $regions,
+            'categories'   => $categories,
+            'services'     => $services,
+            'insurances'   => $insurances,
+            'stats'        => [
+                'facilities' => DB::table('tbl_facilities')->where('status', 1)->whereNull('deleted_at')->count(),
+                'regions'    => DB::table('tbl_regions')->where('status', 1)->count(),
+                'reviews'    => max(
+                    DB::table('tbl_user_ratings')->count(),
+                    DB::table('tbl_user_comments')->where('status', 1)->count(),
+                    (int) DB::table('tbl_facilities')->where('status', 1)->whereNull('deleted_at')->sum('total_reviews')
+                ),
+            ],
+            'testimonials' => DB::table('tbl_user_comments as c')
+                ->join('tbl_users as u', 'u.user_id', '=', 'c.user_id')
+                ->join('tbl_facilities as f', 'f.facility_id', '=', 'c.facility_id')
+                ->leftJoin('tbl_user_ratings as r', function ($join) {
+                    $join->on('r.user_id', '=', 'c.user_id')
+                        ->whereColumn('r.facility_id', 'c.facility_id');
+                })
+                ->leftJoin('tbl_regions as reg', 'reg.region_id', '=', 'f.region_id')
+                ->where('c.status', 1)
+                ->whereNull('f.deleted_at')
+                ->orderBy('c.created_at', 'desc')
+                ->limit(10)
+                ->select([
+                    'c.comment_id as id',
+                    'u.name',
+                    'reg.name as location',
+                    'r.rating',
+                    'c.comment as text',
+                    'c.created_at',
+                    'f.name as facility',
+                ])
+                ->get()
+                ->map(function ($t) {
+                    return [
+                        'id'       => $t->id,
+                        'name'     => $t->name,
+                        'location' => $t->location ?? 'Tanzania',
+                        'rating'   => (int) ($t->rating ?? 5),
+                        'text'     => $t->text,
+                        'date'     => \Carbon\Carbon::parse($t->created_at)->diffForHumans(),
+                        'facility' => $t->facility,
+                    ];
+                })
+                ->values()
+                ->all(),
         ]);
     }
 
@@ -329,8 +373,8 @@ class PageController extends Controller
             ->where('facility_id', $id)
             ->count();
 
-        $facilityRating = $ratingCount > 0 ? round($avgRating, 1) : (float)($row->average_rating ?? 0.0);
-        $facilityReviewCount = $ratingCount > 0 ? $ratingCount : (int)($row->total_reviews ?? 0);
+        $facilityRating = $ratingCount > 0 ? round((float)$avgRating, 1) : (float)($row->average_rating ?? 0.0);
+        $facilityReviewCount = max($ratingCount, count($comments), (int)($row->total_reviews ?? 0));
 
         $mappedFacility = $this->mapFacility($row);
         $mappedFacility['rating'] = $facilityRating;

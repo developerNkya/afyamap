@@ -16,12 +16,16 @@ export default function Home({
     categories = [],
     services = [],
     insurances = [],
+    stats = { facilities: 0, regions: 0, reviews: 0 },
+    testimonials = [],
 }: {
     facilities: any[];
     regions: any[];
     categories: any[];
     services: any[];
     insurances?: any[];
+    stats?: { facilities: number; regions: number; reviews: number };
+    testimonials?: any[];
 }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRegion, setSelectedRegion] = useState('');
@@ -58,6 +62,8 @@ export default function Home({
         services: services.length,
         insurances: insurances.length,
         insuranceList: insurances,
+        stats,
+        testimonials: testimonials.length,
     });
 
     return (
@@ -94,9 +100,9 @@ export default function Home({
 
             <BrowseRegions regions={regions} />
 
-            <StatsSection />
+            <StatsSection stats={stats} />
 
-            <TestimonialsSection />
+            <TestimonialsSection testimonials={testimonials} />
         </div>
     );
 }

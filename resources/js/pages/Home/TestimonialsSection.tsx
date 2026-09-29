@@ -13,55 +13,15 @@ interface Testimonial {
   facility?: string;
 }
 
-const testimonials: Testimonial[] = [
-  {
-    id: 1,
-    name: 'Sarah M.',
-    location: 'Dar es Salaam',
-    rating: 5,
-    text: "The platform helped me find a specialist for my mother within minutes. The SafeCare levels and quality indicators gave me confidence in my choice. Thank you AfyaCare!",
-    date: '2 weeks ago',
-    facility: 'Jakaya Kikwete Cardiac Institute'
-  },
-  {
-    id: 2,
-    name: 'John K.',
-    location: 'Arusha',
-    rating: 5,
-    text: "I was looking for a pediatrician for my newborn son. The filters made it easy to find facilities near me with the right specialists. Great service!",
-    date: '1 month ago',
-    facility: 'Arusha Lutheran Medical Centre'
-  },
-  {
-    id: 3,
-    name: 'Aisha H.',
-    location: 'Mwanza',
-    rating: 4,
-    text: "Excellent resource for finding quality healthcare. The search filters saved me so much time. I found a great dental clinic with excellent reviews.",
-    date: '3 weeks ago',
-    facility: 'Bugando Medical Centre'
-  },
-  {
-    id: 4,
-    name: 'Dr. James M.',
-    location: 'Dodoma',
-    rating: 5,
-    text: "As a healthcare professional, I appreciate how this platform promotes transparency in healthcare delivery. It's helping patients make informed choices.",
-    date: '1 week ago',
-    facility: 'Dodoma Christian Medical Centre'
-  },
-  {
-    id: 5,
-    name: 'Fatima A.',
-    location: 'Zanzibar',
-    rating: 5,
-    text: "Found an excellent eye hospital for my father's cataract surgery. The process was seamless, from search to booking.",
-    date: '2 weeks ago',
-    facility: 'Zanzibar Eye Hospital'
-  }
-];
+interface TestimonialsSectionProps {
+  testimonials?: Testimonial[];
+}
 
-export const TestimonialsSection = () => {
+export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ testimonials = [] }) => {
+  if (!testimonials || testimonials.length === 0) {
+    return null;
+  }
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -118,7 +78,7 @@ export const TestimonialsSection = () => {
         window.removeEventListener('resize', checkScroll);
       };
     }
-  }, [cardWidth]);
+  }, [cardWidth, testimonials]);
 
   const scrollToIndex = (index: number) => {
     const container = scrollContainerRef.current;
@@ -137,7 +97,7 @@ export const TestimonialsSection = () => {
     scrollToIndex(newIndex);
   };
 
-  const averageRating = (testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length).toFixed(1);
+  const averageRating = (testimonials.reduce((sum, t) => sum + (t.rating || 5), 0) / testimonials.length).toFixed(1);
 
   return (
     <section className="py-8 sm:py-12 md:py-16 bg-white">
