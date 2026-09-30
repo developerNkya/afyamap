@@ -452,7 +452,21 @@ class PageController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     public function about()
     {
-        return Inertia::render('About');
+        $facilitiesCount = DB::table('tbl_facilities')->where('status', 1)->whereNull('deleted_at')->count();
+        $regionsCount    = DB::table('tbl_regions')->where('status', 1)->count();
+        $reviewsCount    = max(
+            DB::table('tbl_user_ratings')->count(),
+            DB::table('tbl_user_comments')->where('status', 1)->count(),
+            (int) DB::table('tbl_facilities')->where('status', 1)->whereNull('deleted_at')->sum('total_reviews')
+        );
+
+        return Inertia::render('About', [
+            'stats' => [
+                'facilities' => $facilitiesCount,
+                'regions'    => $regionsCount,
+                'reviews'    => $reviewsCount,
+            ],
+        ]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

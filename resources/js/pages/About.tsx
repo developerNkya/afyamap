@@ -28,12 +28,16 @@ const AnimatedSafeCareLevel = ({ targetLevel, size = 'md' }: { targetLevel: numb
     );
 };
 
-export default function About() {
-    const stats = [
-        { label: 'Facilities Listed', value: '200+', icon: MapPin },
-        { label: 'Patient Reviews', value: '15k+', icon: Users },
-        { label: 'Covered Regions', value: '26', icon: Globe },
-        { label: 'Accuracy Rate', value: '98%', icon: TrendingUp },
+export default function About({ stats }: { stats?: { facilities: number; regions: number; reviews: number } }) {
+    const facilitiesCount = stats?.facilities ?? 0;
+    const regionsCount    = stats?.regions ?? 0;
+    const reviewsCount    = stats?.reviews ?? 0;
+
+    const statItems = [
+        { label: 'Facilities Listed',  value: facilitiesCount > 0 ? `${facilitiesCount}+` : '0', icon: MapPin },
+        { label: 'Patient Reviews',    value: reviewsCount > 0    ? `${reviewsCount}+`    : '0', icon: Users },
+        { label: 'Covered Regions',    value: String(regionsCount),                               icon: Globe },
+        { label: 'Accuracy Rate',      value: '98%',                                              icon: TrendingUp },
     ];
 
     // Updated SafeCare Level descriptions
@@ -125,7 +129,7 @@ export default function About() {
 
                 {/* Stats Row – no animation, just static values */}
                 <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-                    {stats.map((stat, idx) => (
+                    {statItems.map((stat, idx) => (
                         <div
                             key={idx}
                             className="rounded-xl border border-gray-100 bg-white p-6 text-center shadow-sm transition-shadow hover:shadow-md"
