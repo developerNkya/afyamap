@@ -18,22 +18,15 @@ class PageController extends Controller
 {
     /**
      * Get the image base URL with proper environment handling
-     * 
-     * This method determines where to load images from based on the environment.
-     * For production, it uses IMAGE_BASE_URL from .env
-     * For local development, it falls back to APP_URL
      */
     private function getImageBaseUrl(): string
     {
-        // Get the image base URL from config
         $imageBaseUrl = config('app.image_base_url');
 
-        // If not set or null, fallback to APP_URL
         if (empty($imageBaseUrl) || $imageBaseUrl === 'null' || $imageBaseUrl === '') {
             $imageBaseUrl = config('app.url');
         }
 
-        // Remove trailing slash if exists
         return rtrim($imageBaseUrl, '/');
     }
 
@@ -43,21 +36,64 @@ class PageController extends Controller
     public function home()
     {
         // Featured: top-rated active facilities (safecare_level >= 4)
+        // NOTE: ordering by f.average_rating — that's a stale denormalized column
+        // we no longer trust. We re-sort in PHP after computing live ratings below.
         $rawFacilities = $this->buildFacilityQuery()
             ->where('f.status', 1)
             ->whereNull('f.deleted_at')
             ->where('f.safecare_level', '>=', 4)
-            ->orderBy('f.average_rating', 'desc')
-            ->limit(8)
+            ->limit(30) // grab a pool, then sort + trim in PHP
             ->get();
 
-        $facilities = $this->mapFacilitiesWithRelations($rawFacilities);
+        $facilities = collect($this->mapFacilitiesWithRelations($rawFacilities))
+            ->sortByDesc('rating')
+            ->take(8)
+            ->values()
+            ->all();
 
-        // Filter option lists for the hero search bar
         $regions    = $this->getRegions();
-        $categories = $this->getCategories(); // Now filters out Faith-based/NGO
-        $services   = $this->getServices(); // Flat list for home page
+        $categories = $this->getCategories();
+        $services   = $this->getServices();
         $insurances = $this->getInsurances();
+
+        // ── Testimonials ─────────────────────────────────────────────────────
+        $testimonials = DB::table('tbl_user_comments as c')
+            ->leftJoin('tbl_users as u',      'u.user_id',     '=', 'c.user_id')
+            ->leftJoin('tbl_facilities as f', 'f.facility_id', '=', 'c.facility_id')
+            ->leftJoin('tbl_user_ratings as r', function ($join) {
+                $join->on('r.user_id', '=', 'c.user_id')
+                    ->whereColumn('r.facility_id', 'c.facility_id');
+            })
+            ->leftJoin('tbl_regions as reg', 'reg.region_id', '=', 'f.region_id')
+            ->where('c.status', 1)
+            ->whereNotNull('c.comment')
+            ->where('c.comment', '!=', '')
+            ->whereRaw('CHAR_LENGTH(TRIM(c.comment)) >= 5')
+            ->orderBy('c.created_at', 'desc')
+            ->limit(10)
+            ->select([
+                'c.comment_id as id',
+                DB::raw('COALESCE(u.name, "Anonymous") as name'),
+                DB::raw('COALESCE(reg.name, "Tanzania") as location'),
+                'r.rating',
+                'c.comment as text',
+                'c.created_at',
+                DB::raw('COALESCE(f.name, "AfyaMap Facility") as facility'),
+            ])
+            ->get()
+            ->map(function ($t) {
+                return [
+                    'id'       => $t->id,
+                    'name'     => $t->name,
+                    'location' => $t->location ?? 'Tanzania',
+                    'rating'   => (int) ($t->rating ?? 5),
+                    'text'     => $t->text,
+                    'date'     => \Carbon\Carbon::parse($t->created_at)->diffForHumans(),
+                    'facility' => $t->facility,
+                ];
+            })
+            ->values()
+            ->all();
 
         return Inertia::render('Home', [
             'facilities'   => $facilities,
@@ -65,50 +101,8 @@ class PageController extends Controller
             'categories'   => $categories,
             'services'     => $services,
             'insurances'   => $insurances,
-            'stats'        => [
-                'facilities' => DB::table('tbl_facilities')->where('status', 1)->whereNull('deleted_at')->count(),
-                'regions'    => DB::table('tbl_regions')->where('status', 1)->count(),
-                'reviews'    => max(
-                    DB::table('tbl_user_ratings')->count(),
-                    DB::table('tbl_user_comments')->where('status', 1)->count(),
-                    (int) DB::table('tbl_facilities')->where('status', 1)->whereNull('deleted_at')->sum('total_reviews')
-                ),
-            ],
-            'testimonials' => DB::table('tbl_user_comments as c')
-                ->join('tbl_users as u', 'u.user_id', '=', 'c.user_id')
-                ->join('tbl_facilities as f', 'f.facility_id', '=', 'c.facility_id')
-                ->leftJoin('tbl_user_ratings as r', function ($join) {
-                    $join->on('r.user_id', '=', 'c.user_id')
-                        ->whereColumn('r.facility_id', 'c.facility_id');
-                })
-                ->leftJoin('tbl_regions as reg', 'reg.region_id', '=', 'f.region_id')
-                ->where('c.status', 1)
-                ->whereNull('f.deleted_at')
-                ->orderBy('c.created_at', 'desc')
-                ->limit(10)
-                ->select([
-                    'c.comment_id as id',
-                    'u.name',
-                    'reg.name as location',
-                    'r.rating',
-                    'c.comment as text',
-                    'c.created_at',
-                    'f.name as facility',
-                ])
-                ->get()
-                ->map(function ($t) {
-                    return [
-                        'id'       => $t->id,
-                        'name'     => $t->name,
-                        'location' => $t->location ?? 'Tanzania',
-                        'rating'   => (int) ($t->rating ?? 5),
-                        'text'     => $t->text,
-                        'date'     => \Carbon\Carbon::parse($t->created_at)->diffForHumans(),
-                        'facility' => $t->facility,
-                    ];
-                })
-                ->values()
-                ->all(),
+            'stats'        => $this->getStats(),
+            'testimonials' => $testimonials,
         ]);
     }
 
@@ -121,7 +115,6 @@ class PageController extends Controller
             ->where('f.status', 1)
             ->whereNull('f.deleted_at');
 
-        // ── Text search ──────────────────────────────────────────────────────
         if ($request->filled('q')) {
             $s = $request->q;
             $query->where(function ($q) use ($s) {
@@ -133,42 +126,31 @@ class PageController extends Controller
             });
         }
 
-        // ── Category filter ──────────────────────────────────────────────────
         if ($request->filled('category')) {
             $cat = $request->category;
-            if (is_numeric($cat)) {
-                $query->where('f.category_id', $cat);
-            } else {
-                $query->where('c.name', $cat);
-            }
+            is_numeric($cat)
+                ? $query->where('f.category_id', $cat)
+                : $query->where('c.name', $cat);
         }
 
-        // ── Region filter ────────────────────────────────────────────────────
         if ($request->filled('region')) {
             $reg = $request->region;
-            if (is_numeric($reg)) {
-                $query->where('f.region_id', $reg);
-            } else {
-                $query->where('r.name', $reg);
-            }
+            is_numeric($reg)
+                ? $query->where('f.region_id', $reg)
+                : $query->where('r.name', $reg);
         }
 
-        // ── District filter ──────────────────────────────────────────────────
         if ($request->filled('district')) {
             $dist = $request->district;
-            if (is_numeric($dist)) {
-                $query->where('f.district_id', $dist);
-            } else {
-                $query->where('d.name', $dist);
-            }
+            is_numeric($dist)
+                ? $query->where('f.district_id', $dist)
+                : $query->where('d.name', $dist);
         }
 
-        // ── SafeCare level ───────────────────────────────────────────────────
         if ($request->filled('level')) {
             $query->where('f.safecare_level', '>=', (int) $request->level);
         }
 
-        // ── Service filter (via subquery) ────────────────────────────────────
         if ($request->filled('service')) {
             $srv = $request->service;
             $query->whereExists(function ($sub) use ($srv) {
@@ -176,16 +158,13 @@ class PageController extends Controller
                     ->from('tbl_facility_services as fs')
                     ->whereColumn('fs.facility_id', 'f.facility_id');
 
-                if (is_numeric($srv)) {
-                    $sub->where('fs.service_id', $srv);
-                } else {
-                    $sub->join('tbl_services as s', 's.service_id', '=', 'fs.service_id')
-                        ->where('s.name', $srv);
-                }
+                is_numeric($srv)
+                    ? $sub->where('fs.service_id', $srv)
+                    : $sub->join('tbl_services as s', 's.service_id', '=', 'fs.service_id')
+                          ->where('s.name', $srv);
             });
         }
 
-        // ── Insurance filter (via subquery) ──────────────────────────────────
         if ($request->filled('insurance')) {
             $ins = $request->insurance;
             $query->whereExists(function ($sub) use ($ins) {
@@ -193,16 +172,13 @@ class PageController extends Controller
                     ->from('tbl_facility_insurances as fi')
                     ->whereColumn('fi.facility_id', 'f.facility_id');
 
-                if (is_numeric($ins)) {
-                    $sub->where('fi.insurance_id', $ins);
-                } else {
-                    $sub->join('tbl_insurances as i', 'i.insurance_id', '=', 'fi.insurance_id')
-                        ->where('i.name', $ins);
-                }
+                is_numeric($ins)
+                    ? $sub->where('fi.insurance_id', $ins)
+                    : $sub->join('tbl_insurances as i', 'i.insurance_id', '=', 'fi.insurance_id')
+                          ->where('i.name', $ins);
             });
         }
 
-        // ── JCI filter ──────────────────────────────────────────────────────
         if ($request->filled('jci') && $request->jci == '1') {
             $query->where('f.is_accredited', 1);
         }
@@ -213,36 +189,30 @@ class PageController extends Controller
 
         $facilities = $this->mapFacilitiesWithRelations($rawFacilities);
 
-        // ── Filter option lists ───────────────────────────────────────────────
-        $regions    = $this->getRegions();
-        $categories = $this->getCategories(); // Now filters out Faith-based/NGO
+        $regions         = $this->getRegions();
+        $categories      = $this->getCategories();
+        $servicesGrouped = $this->getGroupedServices();
+        $servicesFlat    = $this->getServices();
+        $insurances      = $this->getInsurances();
 
-        // For facilities list, we need grouped services for the sidebar
-        // AND flat services for the search bar dropdown
-        $servicesGrouped = $this->getGroupedServices(); // Grouped for sidebar
-        $servicesFlat = $this->getServices(); // Flat for search bar
-
-        $insurances = $this->getInsurances();
-
-        // Districts for the selected region (for cascading dropdown)
         $districts = $request->filled('region')
             ? District::where('region_id', $request->region)
-            ->where('status', 1)
-            ->orderBy('name')
-            ->get(['district_id', 'name'])
-            ->map(fn($d) => ['id' => $d->district_id, 'name' => $d->name])
-            ->values()
+                ->where('status', 1)
+                ->orderBy('name')
+                ->get(['district_id', 'name'])
+                ->map(fn($d) => ['id' => $d->district_id, 'name' => $d->name])
+                ->values()
             : collect();
 
         return Inertia::render('FacilitiesList', [
-            'facilities' => $facilities,
-            'regions'    => $regions,
-            'categories' => $categories,
-            'services'   => $servicesGrouped, // Grouped for sidebar
-            'servicesFlat' => $servicesFlat, // Flat for search bar
-            'insurances' => $insurances,
-            'districts'  => $districts,
-            'filters'    => $request->only(['q', 'region', 'district', 'category', 'service', 'insurance', 'level', 'jci']),
+            'facilities'   => $facilities,
+            'regions'      => $regions,
+            'categories'   => $categories,
+            'services'     => $servicesGrouped,
+            'servicesFlat' => $servicesFlat,
+            'insurances'   => $insurances,
+            'districts'    => $districts,
+            'filters'      => $request->only(['q', 'region', 'district', 'category', 'service', 'insurance', 'level', 'jci']),
         ]);
     }
 
@@ -251,7 +221,6 @@ class PageController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     public function facilityDetail($id)
     {
-        // Core facility row with joins - include deleted_at check
         $row = $this->buildFacilityQuery()
             ->where('f.facility_id', $id)
             ->whereNull('f.deleted_at')
@@ -305,7 +274,7 @@ class PageController extends Controller
             ->get()
             ->toArray();
 
-        // ── Gallery images ────────────────────────────────────────────────────
+        // ── Gallery ───────────────────────────────────────────────────────────
         $imageBaseUrl = $this->getImageBaseUrl();
         $gallery = DB::table('tbl_facility_images')
             ->where('facility_id', $id)
@@ -316,14 +285,13 @@ class PageController extends Controller
             ->values()
             ->all();
 
-        // If no gallery images, use logo as fallback
         if (empty($gallery) && $row->logo) {
             $gallery = [$imageBaseUrl . '/uploads/facilities/' . $row->logo];
         }
 
-        // ── Dynamic Comments & Ratings ───────────────────────────────────────
+        // ── Comments ─────────────────────────────────────────────────────────
         $comments = DB::table('tbl_user_comments as c')
-            ->join('tbl_users as u', 'u.user_id', '=', 'c.user_id')
+            ->leftJoin('tbl_users as u', 'u.user_id', '=', 'c.user_id')
             ->leftJoin('tbl_user_ratings as r', function ($join) use ($id) {
                 $join->on('r.user_id', '=', 'c.user_id')
                     ->where('r.facility_id', '=', $id);
@@ -335,7 +303,7 @@ class PageController extends Controller
                 'c.comment_id as id',
                 'c.comment as text',
                 'c.created_at',
-                'u.name',
+                DB::raw('COALESCE(u.name, "Anonymous") as name'),
                 'u.user_image',
                 'r.rating'
             ])
@@ -351,6 +319,7 @@ class PageController extends Controller
                 return $c;
             });
 
+        // ── Ratings — all computed live ──────────────────────────────────────
         $ratingsGroup = DB::table('tbl_user_ratings')
             ->where('facility_id', $id)
             ->select('rating', DB::raw('count(*) as count'))
@@ -365,19 +334,17 @@ class PageController extends Controller
             $ratingDistribution[$i] = $totalRatings > 0 ? round(($count / $totalRatings) * 100) : 0;
         }
 
-        $avgRating = DB::table('tbl_user_ratings')
-            ->where('facility_id', $id)
-            ->avg('rating');
+        $avgRating   = DB::table('tbl_user_ratings')->where('facility_id', $id)->avg('rating');
+        $ratingCount = DB::table('tbl_user_ratings')->where('facility_id', $id)->count();
 
-        $ratingCount = DB::table('tbl_user_ratings')
+        $facilityRating      = $ratingCount > 0 ? round((float) $avgRating, 1) : 0.0;
+        $facilityReviewCount = DB::table('tbl_user_comments')
             ->where('facility_id', $id)
+            ->where('status', 1)
             ->count();
 
-        $facilityRating = $ratingCount > 0 ? round((float)$avgRating, 1) : (float)($row->average_rating ?? 0.0);
-        $facilityReviewCount = max($ratingCount, count($comments), (int)($row->total_reviews ?? 0));
-
         $mappedFacility = $this->mapFacility($row);
-        $mappedFacility['rating'] = $facilityRating;
+        $mappedFacility['rating']      = $facilityRating;
         $mappedFacility['reviewCount'] = $facilityReviewCount;
 
         $facility = array_merge($mappedFacility, [
@@ -395,14 +362,18 @@ class PageController extends Controller
         ]);
 
         return Inertia::render('FacilityDetail', [
-            'facility' => $facility,
-            'comments' => $comments,
-            'ratingDistribution' => $ratingDistribution
+            'facility'           => $facility,
+            'comments'           => $comments,
+            'ratingDistribution' => $ratingDistribution,
         ]);
     }
 
     /**
-     * Store facility review and comment from authenticated users.
+     * Store a facility review + comment.
+     *
+     * NOTE: This does NOT update tbl_facilities. All counts/averages
+     * are computed live on read, so the stale denormalized columns
+     * are simply ignored.
      */
     public function storeReview(Request $request, $id)
     {
@@ -413,13 +384,13 @@ class PageController extends Controller
 
         $userId = Auth::id();
 
-        // 1. Update/insert rating in tbl_user_ratings
+        // 1. Rating
         DB::table('tbl_user_ratings')->updateOrInsert(
             ['facility_id' => $id, 'user_id' => $userId],
             ['rating' => $request->rating, 'created_at' => now()]
         );
 
-        // 2. Insert comment in tbl_user_comments
+        // 2. Comment
         DB::table('tbl_user_comments')->insert([
             'facility_id' => $id,
             'user_id'     => $userId,
@@ -428,21 +399,7 @@ class PageController extends Controller
             'created_at'  => now(),
         ]);
 
-        // 3. Update facility's average_rating and total_reviews
-        $avgRating = DB::table('tbl_user_ratings')
-            ->where('facility_id', $id)
-            ->avg('rating');
-
-        $ratingCount = DB::table('tbl_user_ratings')
-            ->where('facility_id', $id)
-            ->count();
-
-        DB::table('tbl_facilities')
-            ->where('facility_id', $id)
-            ->update([
-                'average_rating' => round($avgRating, 2),
-                'total_reviews'  => $ratingCount
-            ]);
+        // 3. Nothing else — no facility counter update.
 
         return redirect()->back()->with('success', 'Thank you! Your review has been submitted successfully.');
     }
@@ -452,41 +409,21 @@ class PageController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     public function about()
     {
-        $facilitiesCount = DB::table('tbl_facilities')->where('status', 1)->whereNull('deleted_at')->count();
-        $regionsCount    = DB::table('tbl_regions')->where('status', 1)->count();
-        $reviewsCount    = max(
-            DB::table('tbl_user_ratings')->count(),
-            DB::table('tbl_user_comments')->where('status', 1)->count(),
-            (int) DB::table('tbl_facilities')->where('status', 1)->whereNull('deleted_at')->sum('total_reviews')
-        );
-
         return Inertia::render('About', [
-            'stats' => [
-                'facilities' => $facilitiesCount,
-                'regions'    => $regionsCount,
-                'reviews'    => $reviewsCount,
-            ],
+            'stats' => $this->getStats(),
         ]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CONTACT - Page & Form Submission
+    // CONTACT
     // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Display the contact page
-     */
     public function contact()
     {
         return Inertia::render('Contact');
     }
 
-    /**
-     * Send contact form email
-     */
     public function sendContact(Request $request)
     {
-        // Validate the request
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'email'        => 'required|email|max:255',
@@ -495,9 +432,9 @@ class PageController extends Controller
         ]);
 
         try {
-            $name = $validated['name'];
-            $email = $validated['email'];
-            $type = $validated['inquiry_type'];
+            $name    = $validated['name'];
+            $email   = $validated['email'];
+            $type    = $validated['inquiry_type'];
             $message = $validated['message'];
 
             $emailBody = "
@@ -551,18 +488,11 @@ class PageController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     // PRIVACY & TERMS
     // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Privacy Policy page
-     */
     public function privacy()
     {
         return Inertia::render('Privacy');
     }
 
-    /**
-     * Terms & Conditions page
-     */
     public function terms()
     {
         return Inertia::render('Terms');
@@ -573,8 +503,38 @@ class PageController extends Controller
     // =========================================================================
 
     /**
-     * Base query builder — joins categories, regions, districts.
-     * Selects the core columns needed by mapFacility().
+     * Site-wide stats — all computed live, nothing read from stale columns.
+     */
+    private function getStats(): array
+    {
+        return [
+            'facilities' => DB::table('tbl_facilities')
+                ->where('status', 1)
+                ->whereNull('deleted_at')
+                ->count(),
+
+            'regions' => DB::table('tbl_facilities')
+                ->where('status', 1)
+                ->whereNull('deleted_at')
+                ->whereNotNull('region_id')
+                ->where('region_id', '>', 0)
+                ->distinct('region_id')
+                ->count('region_id'),
+
+            // Live count of approved comments on live facilities.
+            'reviews' => DB::table('tbl_user_comments as c')
+                ->join('tbl_facilities as f', 'f.facility_id', '=', 'c.facility_id')
+                ->where('c.status', 1)
+                ->where('f.status', 1)
+                ->whereNull('f.deleted_at')
+                ->count(),
+        ];
+    }
+
+    /**
+     * Base facility query. Only selects columns that physically exist on
+     * tbl_facilities — we do NOT rely on average_rating / total_reviews
+     * being accurate (they're computed live instead).
      */
     private function buildFacilityQuery()
     {
@@ -589,8 +549,6 @@ class PageController extends Controller
                 'f.safecare_level',
                 'f.is_accredited',
                 'f.is_emergency',
-                'f.average_rating',
-                'f.total_reviews',
                 'f.latitude',
                 'f.longitude',
                 'f.phone',
@@ -610,7 +568,9 @@ class PageController extends Controller
     }
 
     /**
-     * Map a raw DB row (stdClass) to the shape expected by the React components.
+     * Map a raw facility row. rating/reviewCount are set to placeholder
+     * values here — mapFacilitiesWithRelations() overwrites them with
+     * live-computed values.
      */
     private function mapFacility($row): array
     {
@@ -620,7 +580,6 @@ class PageController extends Controller
             $logo = $imageBaseUrl . '/uploads/facilities/' . $row->logo;
         }
 
-        // Build a human-readable hours string
         $hours = null;
         if (!empty($row->open_time) && !empty($row->close_time)) {
             $hours = $row->open_time . ' – ' . $row->close_time;
@@ -642,8 +601,8 @@ class PageController extends Controller
             'district'      => $row->district_name ?? '',
             'safeCareLevel' => (int) ($row->safecare_level ?? 0),
             'jciAccredited' => (bool) ($row->is_accredited  ?? false),
-            'rating'        => round((float) ($row->average_rating ?? 0), 1),
-            'reviewCount'   => (int)  ($row->total_reviews  ?? 0),
+            'rating'        => 0.0,   // filled in live below
+            'reviewCount'   => 0,     // filled in live below
             'lat'           => $row->latitude  ? (float) $row->latitude  : null,
             'lng'           => $row->longitude ? (float) $row->longitude : null,
             'address'       => trim(($row->street ?? '') . ' ' . ($row->address ?? '')),
@@ -662,14 +621,14 @@ class PageController extends Controller
     }
 
     /**
-     * Map raw facility records and load services and insurances for each.
-     * Now loads services grouped by category for each facility.
+     * Map facilities and attach services, insurances, live ratings,
+     * and live review counts. Three batch queries total — no N+1.
      */
     private function mapFacilitiesWithRelations($rawFacilities)
     {
         $facilityIds = $rawFacilities->pluck('facility_id')->all();
 
-        // Load services grouped by category for each facility
+        // ── Services grouped by category ─────────────────────────────────────
         $servicesByFacility = [];
         if (!empty($facilityIds)) {
             $serviceRows = DB::table('tbl_facility_services as fs')
@@ -688,13 +647,11 @@ class PageController extends Controller
                 ->get();
 
             foreach ($serviceRows as $srv) {
-                if (!isset($servicesByFacility[$srv->facility_id])) {
-                    $servicesByFacility[$srv->facility_id] = [];
-                }
                 $servicesByFacility[$srv->facility_id][$srv->category_name][] = $srv->service_name;
             }
         }
 
+        // ── Insurances ────────────────────────────────────────────────────────
         $insurancesByFacility = [];
         if (!empty($facilityIds)) {
             $insuranceRows = DB::table('tbl_facility_insurances as fi')
@@ -702,21 +659,60 @@ class PageController extends Controller
                 ->whereIn('fi.facility_id', $facilityIds)
                 ->select('fi.facility_id', 'i.name')
                 ->get();
+
             foreach ($insuranceRows as $ins) {
                 $insurancesByFacility[$ins->facility_id][] = $ins->name;
             }
         }
 
-        return $rawFacilities->map(function ($f) use ($servicesByFacility, $insurancesByFacility) {
+        // ── Live review counts (approved comments) ────────────────────────────
+        $reviewCountByFacility = [];
+        if (!empty($facilityIds)) {
+            $reviewCounts = DB::table('tbl_user_comments')
+                ->whereIn('facility_id', $facilityIds)
+                ->where('status', 1)
+                ->select('facility_id', DB::raw('COUNT(*) as cnt'))
+                ->groupBy('facility_id')
+                ->pluck('cnt', 'facility_id');
+
+            foreach ($reviewCounts as $fid => $cnt) {
+                $reviewCountByFacility[$fid] = (int) $cnt;
+            }
+        }
+
+        // ── Live rating averages ──────────────────────────────────────────────
+        $ratingByFacility = [];
+        if (!empty($facilityIds)) {
+            $ratingAvgs = DB::table('tbl_user_ratings')
+                ->whereIn('facility_id', $facilityIds)
+                ->select('facility_id', DB::raw('AVG(rating) as avg_rating'))
+                ->groupBy('facility_id')
+                ->pluck('avg_rating', 'facility_id');
+
+            foreach ($ratingAvgs as $fid => $avg) {
+                $ratingByFacility[$fid] = round((float) $avg, 1);
+            }
+        }
+
+        return $rawFacilities->map(function ($f) use (
+            $servicesByFacility,
+            $insurancesByFacility,
+            $reviewCountByFacility,
+            $ratingByFacility
+        ) {
             $mapped = $this->mapFacility($f);
-            $mapped['services'] = $servicesByFacility[$f->facility_id] ?? [];
-            $mapped['insurances'] = $insurancesByFacility[$f->facility_id] ?? [];
+
+            $mapped['services']    = $servicesByFacility[$f->facility_id]   ?? [];
+            $mapped['insurances']  = $insurancesByFacility[$f->facility_id] ?? [];
+            $mapped['reviewCount'] = $reviewCountByFacility[$f->facility_id] ?? 0;
+            $mapped['rating']      = $ratingByFacility[$f->facility_id]     ?? 0.0;
+
             return $mapped;
         })->values()->all();
     }
 
     /**
-     * Get regions with facility counts.
+     * Get regions with live facility counts.
      */
     private function getRegions(): array
     {
@@ -743,16 +739,15 @@ class PageController extends Controller
     }
 
     /**
-     * Get categories filtered to exclude "Faith-based / NGO (non-profit)"
+     * Get categories (excludes Faith-based / NGO).
      */
     private function getCategories(): array
     {
         $excludedCategories = [
             'Faith-based / NGO (non-profit)',
-            'Faith-based / NGO (non-profit)',
             'Faith-based',
             'NGO',
-            'Faith-based / NGO'
+            'Faith-based / NGO',
         ];
 
         $counts = DB::table('tbl_facilities')
@@ -779,7 +774,7 @@ class PageController extends Controller
     }
 
     /**
-     * Get services grouped by category for filter sidebar.
+     * Get services grouped by category.
      */
     private function getGroupedServices(): array
     {
@@ -794,9 +789,6 @@ class PageController extends Controller
 
         $services = [];
         foreach ($servicesData as $sd) {
-            if (!isset($services[$sd->category_name])) {
-                $services[$sd->category_name] = [];
-            }
             $services[$sd->category_name][] = $sd->service_name;
         }
 
@@ -804,7 +796,7 @@ class PageController extends Controller
     }
 
     /**
-     * Get flat list of services for search bar dropdowns.
+     * Get flat list of services.
      */
     private function getServices(): array
     {
